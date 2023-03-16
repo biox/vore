@@ -131,6 +131,9 @@ func (s *Site) registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// username fetches a client's username based
+// on the sessionToken that user has set. username
+// will return "" if there is no sessionToken.
 func (s *Site) username(r *http.Request) string {
 	sessionToken, err := r.Cookie("session_token")
 	if err != nil {
