@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"git.j3s.sh/feeds.gay/auth"
@@ -26,10 +25,6 @@ func New() *Site {
 		db:    sqlite.New(title + ".db"),
 	}
 	return &s
-}
-
-func (s *Site) Start(addr string, mux *http.ServeMux) {
-	log.Fatal(http.ListenAndServe(addr, mux))
 }
 
 func (s *Site) indexHandler(w http.ResponseWriter, r *http.Request) {
@@ -69,8 +64,8 @@ func (s *Site) loginHandler(w http.ResponseWriter, r *http.Request) {
 				<input type="password" name="password" required><br>
 				<input type="submit" value="login">
 				</form>
-				<p>if you want to create an account, click
-				<a href="/register">here</a>`)
+				<p>if you want to register a new account, click the tree:
+				<a href="/register">🌳</a>`)
 		}
 	}
 	if r.Method == "POST" {
@@ -79,7 +74,9 @@ func (s *Site) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 		err := s.login(w, username, password)
 		if err != nil {
-			fmt.Fprintf(w, "<h1>incorrect username/password</h1>")
+			fmt.Fprintf(w, `<h1>incorrect username/password</h1>
+				<p>if you want to register a new account, click the tree:
+				<a href="/register">🌳</a>`)
 			return
 		}
 		http.Redirect(w, r, "/", http.StatusSeeOther)

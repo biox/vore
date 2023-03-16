@@ -6,7 +6,7 @@ todo
      discover (list of top20 most popular feeds on feeds.gay)
    logged in:
      discover (list of top20 most popular feeds on feeds.gay)
- [ ] GET /login
+ [x] GET /login
    form (existing account): username & password
    form (new account): username & password
    built & maintained by jes
@@ -55,7 +55,7 @@ todo
   auth'd: my feeds | login
 
  sql
-   user      (id, username, password, created_at)
+   user      (id, username, password, session_token, created_at)
    feed      (id, url, fetch_error, created_at, created_by)
    subscribe (id, user, feed, created_at, created_by)
 

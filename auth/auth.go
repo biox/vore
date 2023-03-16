@@ -1,12 +1,19 @@
 package auth
 
 import (
-	"fmt"
-	"time"
+	"crypto/rand"
+	"encoding/hex"
 )
 
 func GenerateSessionToken() string {
-	// TODO: don't use the time ffs
-	token := fmt.Sprintf("%x", time.Now().UnixNano())
-	return token
+	// 32 bytes == 256 bits (AES security margin is 128 bits)
+	return generateSecureToken(32)
+}
+
+func generateSecureToken(length int) string {
+	b := make([]byte, length)
+	if _, err := rand.Read(b); err != nil {
+		return ""
+	}
+	return hex.EncodeToString(b)
 }
