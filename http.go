@@ -8,7 +8,7 @@ import (
 func internalServerError(w http.ResponseWriter, details string) {
 	status := "oopsie woopsie, uwu\n"
 	status += "we made a fucky wucky!!\n\n"
-	status += details
+	status += "500 internal server error: " + details
 	http.Error(w, status, http.StatusInternalServerError)
 }
 

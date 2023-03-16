@@ -1,22 +1,29 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 
+	"git.j3s.sh/feeds.gay/auth"
 	"git.j3s.sh/feeds.gay/sqlite"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Site struct {
-	db *sql.DB
+	// title of the website
+	title string
+
+	// site database handle
+	db *sqlite.DB
 }
 
 // New returns a fully populated & ready for action Site
 func New() *Site {
+	title := "feeds.gay"
 	s := Site{
-		db: sqlite.SetupAndOpen("feeds.gay.db"),
+		title: "feeds.gay",
+		db:    sqlite.New(title + ".db"),
 	}
 	return &s
 }
@@ -25,7 +32,7 @@ func (s *Site) Start(addr string, mux *http.ServeMux) {
 	log.Fatal(http.ListenAndServe(addr, mux))
 }
 
-func (s *Site) rootHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Site) indexHandler(w http.ResponseWriter, r *http.Request) {
 	if !methodAllowed(w, r, "GET") {
 		return
 	}
@@ -35,7 +42,15 @@ func (s *Site) rootHandler(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	fmt.Fprintf(w, "feeds.gay is dope & you should like it\n")
+	if s.authenticated(r) {
+		fmt.Fprintf(w, `<h1>sup shitbag</h1>
+				<a href="/logout">logout</a>`)
+	} else {
+		fmt.Fprintf(w, `<h1>sup shitbag</h1>
+				<a href="/login">login</a>
+				<a href="/register">register</a>
+				<a href="/logout">logout</a>`)
+	}
 }
 
 func (s *Site) loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -43,29 +58,122 @@ func (s *Site) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method == "GET" {
-		// if logged out:
-		fmt.Fprintf(w, "display login forms\n")
-		// if logged in:
-		fmt.Fprintf(w, "you are already logged in :D\n")
+		if s.authenticated(r) {
+			fmt.Fprintf(w, "you are already logged in :3\n")
+		} else {
+			fmt.Fprintf(w, `<h1>login</h1>
+					<form method="POST" action="/login">
+					<label for="username">username:</label>
+					<input type="text" name="username" required><br>
+					<label for="password">password:</label>
+					<input type="password" name="password" required><br>
+					<input type="submit" value="login">
+					</form>`)
+		}
 	}
 	if r.Method == "POST" {
-		fmt.Fprintf(w, "cmon POST\n")
+		username := r.FormValue("username")
+		password := r.FormValue("password")
+
+		err := s.login(w, username, password)
+		if err != nil {
+			fmt.Fprintf(w, "<h1>incorrect username/password</h1>")
+			return
+		}
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
 
 func (s *Site) logoutHandler(w http.ResponseWriter, r *http.Request) {
-	if !methodAllowed(w, r, "POST") {
+	if !methodAllowed(w, r, "GET") {
 		return
 	}
-	// TODO: delete session cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:  "session_token",
+		Value: "",
+	})
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (s *Site) registerHandler(w http.ResponseWriter, r *http.Request) {
-	if !methodAllowed(w, r, "POST") {
+	if !methodAllowed(w, r, "GET", "POST") {
 		return
 	}
-	// TODO: create user in database
-	// TODO: add session cookie
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+
+	if r.Method == "GET" {
+		fmt.Fprintf(w, `<h1>register</h1>
+				<form method="POST" action="/register">
+				<label for="username">username:</label>
+				<input type="text" name="username" required><br>
+				<label for="password">password:</label>
+				<input type="password" name="password" required><br>
+				<input type="submit" value="login">
+				</form>`)
+	}
+
+	if r.Method == "POST" {
+		username := r.FormValue("username")
+		password := r.FormValue("password")
+		err := s.register(username, password)
+		if err != nil {
+			internalServerError(w, "failed to register user")
+			return
+		}
+		err = s.login(w, username, password)
+		if err != nil {
+			internalServerError(w, "extremely weird login error")
+			return
+		}
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
+}
+
+func (s *Site) authenticated(r *http.Request) bool {
+	sessionToken, err := r.Cookie("session_token")
+	if err != nil {
+		return false
+	}
+
+	username := s.db.GetUsernameBySessionToken(sessionToken.Value)
+	if username == "" {
+		return false
+	}
+
+	return true
+}
+
+// login compares the sqlite password field against the user supplied password and
+// sets a session token against the supplied writer.
+func (s *Site) login(w http.ResponseWriter, username string, password string) error {
+	storedPassword := s.db.GetPassword(username)
+	if storedPassword == "" {
+		return fmt.Errorf("blank stored password")
+	}
+	if username == "" {
+		return fmt.Errorf("username cannot be nil")
+	}
+	if password == "" {
+		return fmt.Errorf("password cannot be nil")
+	}
+	err := bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(password))
+	if err != nil {
+		return fmt.Errorf("invalid password")
+	}
+	sessionToken := auth.GenerateSessionToken()
+	s.db.SetSessionToken(username, sessionToken)
+	http.SetCookie(w, &http.Cookie{
+		Name:  "session_token",
+		Value: sessionToken,
+	})
+	return nil
+}
+
+func (s *Site) register(username string, password string) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	s.db.AddUser(username, string(hashedPassword))
+	return nil
 }
