@@ -21,7 +21,7 @@ type Site struct {
 func New() *Site {
 	title := "feeds.gay"
 	s := Site{
-		title: "feeds.gay",
+		title: title,
 		db:    sqlite.New(title + ".db"),
 	}
 	return &s
