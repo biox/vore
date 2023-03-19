@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"git.j3s.sh/feeds.gay/auth"
-	"git.j3s.sh/feeds.gay/sqlite"
+	"git.j3s.sh/vore/auth"
+	"git.j3s.sh/vore/sqlite"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,7 +20,7 @@ type Site struct {
 
 // New returns a fully populated & ready for action Site
 func New() *Site {
-	title := "feeds.gay"
+	title := "vore"
 	s := Site{
 		title: title,
 		db:    sqlite.New(title + ".db"),

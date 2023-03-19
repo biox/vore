@@ -2,10 +2,10 @@ todo
 
  [ ] GET /
    logged out:
-     describe what feeds.gay is & why it's cool, tell ppl to sign up
-     discover (list of top20 most popular feeds on feeds.gay)
+     describe what vore is & why it's cool, tell ppl to sign up
+     discover (list of top20 most popular feeds on vore)
    logged in:
-     discover (list of top20 most popular feeds on feeds.gay)
+     discover (list of top20 most popular feeds on vore)
  [x] GET /login
    form (existing account): username & password
    form (new account): username & password

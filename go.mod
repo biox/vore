@@ -1,4 +1,4 @@
-module git.j3s.sh/feeds.gay
+module git.j3s.sh/vore
 
 go 1.20
 
