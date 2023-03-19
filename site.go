@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"git.j3s.sh/feeds.gay/auth"
 	"git.j3s.sh/feeds.gay/sqlite"
@@ -123,6 +124,37 @@ func (s *Site) registerHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
+}
+
+func (s *Site) userHandler(w http.ResponseWriter, r *http.Request) {
+	if !methodAllowed(w, r, "GET") {
+		return
+	}
+	username := strings.TrimPrefix(r.URL.Path, "/")
+
+	fmt.Fprintf(w, `<!DOCTYPE html>
+			<p>%s's feeds:`, username)
+	// feeds := s.db.GetFeeds(username)
+	// 	for _, feed := range feeds {
+	// 		fmt.Fprintf(w, "<p>%s", feed)
+	// 	}
+
+	// print the list of feeds
+
+	// if s.loggedIn(r) {
+	// 	// TODO: render user template
+	// } else {
+	// 	// TODO: render user template
+	// }
+	// fmt.Fprintf(w, `<!DOCTYPE html>
+	//
+	//	<title>%s</title>
+	//	<p> { %s <a href=/logout>logout</a> }`, s.title, s.username(r))
+	//
+	// fmt.Fprintf(w, `<!DOCTYPE html>
+	//
+	//	<title>%s</title>
+	//	<a href="/login">login</a>`, s.title)
 }
 
 // username fetches a client's username based

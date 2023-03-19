@@ -31,19 +31,22 @@ todo
    register failure: redirect to /login
    TODO: validate user input
  [ ] GET /{username}
-   display pretty feeds for a given user
-   there is a button to view the raw feed list (plaintext)
-   if logged in: there is an edit button
- [ ] GET /{username}/feeds
-   put your feeds here, one per line:
+   display a users feed items by date, maybe in a table?
+   -> there is a button to view the feed an article came from
+ [ ] GET /feeds
+   pretty-print your feeds
    <text box with pre-populated list of feeds from {username}>
    display a text box pre-populated with the list of feeds that make up {username}
    if you don't know what feeds to use, check out /discover for ideas
    button: validate
 
    if validated, display locked list of feeds with button: submit
- [ ] POST /{username}/feeds
-   subscribe to all of the feeds in your textbox
+ [ ] POST /feeds
+   range over submitted feeds & validate them
+   success: redir to /feeds/validate
+   fail: user input err or whatever it's called
+
+ extra: tool for looking up feed from website
 
  background:
  fetch feeds every ~90m

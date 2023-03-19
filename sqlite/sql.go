@@ -60,7 +60,7 @@ func New(path string) *DB {
 	return &wrapper
 }
 
-// TODO: evaluate error cases
+// TODO: think more about errors
 
 func (s *DB) GetUsernameBySessionToken(token string) string {
 	var username string
@@ -85,6 +85,7 @@ func (s *DB) GetPassword(username string) string {
 	}
 	return password
 }
+
 func (s *DB) SetSessionToken(username string, token string) {
 	_, err := s.sql.Exec("UPDATE user SET session_token=? WHERE username=?", token, username)
 	if err != nil {
@@ -97,4 +98,28 @@ func (s *DB) AddUser(username string, passwordHash string) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (s *DB) UserExists(username string) bool {
+	var result string
+	err := s.sql.QueryRow("SELECT username FROM user WHERE username=?", username).Scan(&result)
+	if err == sql.ErrNoRows {
+		return false
+	}
+	if err != nil {
+		panic(err)
+	}
+	return true
+}
+
+func (s *DB) GetFeeds(username string) bool {
+	var result string
+	err := s.sql.QueryRow("SELECT username FROM user WHERE username=?", username).Scan(&result)
+	if err == sql.ErrNoRows {
+		return false
+	}
+	if err != nil {
+		panic(err)
+	}
+	return true
 }
