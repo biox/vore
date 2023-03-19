@@ -31,20 +31,14 @@ func (s *Site) indexHandler(w http.ResponseWriter, r *http.Request) {
 	if !methodAllowed(w, r, "GET") {
 		return
 	}
-	// The "/" pattern matches everything, so we need to check
-	// that we're at the root here.
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
 	if s.loggedIn(r) {
-		fmt.Fprintf(w, `<h1>index</h1>
-			<small>logged in as %s
-			(<a href="/logout">logout</a>)
-			</small>`, s.username(r))
+		fmt.Fprintf(w, `<!DOCTYPE html>
+			<title>%s</title>
+			<p> { %s <a href=/logout>logout</a> }`, s.title, s.username(r))
 	} else {
-		fmt.Fprintf(w, `<h1>index</h1>
-			<a href="/login">login</a>`)
+		fmt.Fprintf(w, `<!DOCTYPE html>
+			<title>%s</title>
+			<a href="/login">login</a>`, s.title)
 	}
 }
 
@@ -56,7 +50,8 @@ func (s *Site) loginHandler(w http.ResponseWriter, r *http.Request) {
 		if s.loggedIn(r) {
 			fmt.Fprintf(w, "you are already logged in :3\n")
 		} else {
-			fmt.Fprintf(w, `<h1>login</h1>
+			fmt.Fprintf(w, `<!DOCTYPE html>
+				<pre>login</pre>
 				<form method="POST" action="/login">
 				<label for="username">username:</label>
 				<input type="text" name="username" required><br>
@@ -74,9 +69,10 @@ func (s *Site) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 		err := s.login(w, username, password)
 		if err != nil {
-			fmt.Fprintf(w, `<h1>incorrect username/password</h1>
-				<p>if you want to register a new account, click the tree:
-				<a href="/register">🌳</a>`)
+			fmt.Fprintf(w, `<!DOCTYPE html>
+				<p>⚠️ incorrect username/password ⚠️
+				<p>to register a new account, click the skull:
+				<a href="/register">💀</a>`)
 			return
 		}
 		http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -101,7 +97,8 @@ func (s *Site) registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		fmt.Fprintf(w, `<h1>register</h1>
+		fmt.Fprintf(w, `<!DOCTYPE html>
+			<pre>register</pre>
 			<form method="POST" action="/register">
 			<label for="username">username:</label>
 			<input type="text" name="username" required><br>

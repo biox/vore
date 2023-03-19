@@ -10,18 +10,18 @@ todo
    form (existing account): username & password
    form (new account): username & password
    built & maintained by jes
- [ ] POST /login
+ [x] POST /login
    success:
      add session cookie
-     update last_login
      redirect to /{username}
    fail:
      log an existing user in, add session cookie, redirect to /{username}
      login failure, redirect to /login
- [ ] POST /logout
+ [x] POST /logout
    delete session cookie if exists
    redirect to /
- [ ] POST /register
+   TODO: expire session_token from db eventually
+ [x] POST /register
    success:
      add session cookie
      redirect to /
@@ -29,6 +29,7 @@ todo
      update
    add new user & hashed password to database
    register failure: redirect to /login
+   TODO: validate user input
  [ ] GET /{username}
    display pretty feeds for a given user
    there is a button to view the raw feed list (plaintext)
@@ -43,9 +44,6 @@ todo
    if validated, display locked list of feeds with button: submit
  [ ] POST /{username}/feeds
    subscribe to all of the feeds in your textbox
-
- maybe:
-   rate limiting for logins & registrations
 
  background:
  fetch feeds every ~90m
