@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 	"strings"
 )
@@ -25,10 +25,11 @@ func main() {
 		}
 		http.NotFound(w, r)
 	})
+	mux.HandleFunc("/feeds", s.feedsHandler)
 	mux.HandleFunc("/login", s.loginHandler)
 	mux.HandleFunc("/logout", s.logoutHandler)
 	mux.HandleFunc("/register", s.registerHandler)
 
-	log.Println("listening on http://localhost:5544")
-	log.Fatal(http.ListenAndServe(":5544", mux))
+	fmt.Printf("vore: listening on http://localhost:5544")
+	panic(http.ListenAndServe(":5544", mux))
 }

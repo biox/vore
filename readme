@@ -1,5 +1,7 @@
 todo
 
+ [ ] GET /discover
+   (similar to sourcehut's "featured projects")
  [ ] GET /
    logged out:
      describe what vore is & why it's cool, tell ppl to sign up
@@ -30,21 +32,40 @@ todo
    add new user & hashed password to database
    register failure: redirect to /login
    TODO: validate user input
+
+ [ ] GET /feeds
+   > if no feeds, /discover for ideas
+   pretty-print your feeds
+   <text box with pre-populated list of your feed urls, one per line>
+   button: validate
+   POST /feeds/validate
+   logged out: unauthorized. click here to login.
+
+ [ ] POST /feeds/validate
+    make sure each url is resolvable
+    check if feed exists in db already
+      if it does, do nothing
+      if it doesn't, attempt fetching it
+      TODO: validate that title exists
+    redir -> /feeds/validate
+    logged out: 401 unauthorized
+
+ [ ] GET /feeds/validate
+    shows feed diff
+    "if this all looks correct, hit submit:"
+    button: submit
+    POST /feeds/submit
+    logged out: 401 unauthorized
+
+ [ ] POST /feeds/submit
+   writes desired feeds to database
+   subscribes user to feeds
+   redir -> /feeds
+    logged out: 401 unauthorized
+
  [ ] GET /{username}
    display a users feed items by date, maybe in a table?
    -> there is a button to view the feed an article came from
- [ ] GET /feeds
-   pretty-print your feeds
-   <text box with pre-populated list of feeds from {username}>
-   display a text box pre-populated with the list of feeds that make up {username}
-   if you don't know what feeds to use, check out /discover for ideas
-   button: validate
-
-   if validated, display locked list of feeds with button: submit
- [ ] POST /feeds
-   range over submitted feeds & validate them
-   success: redir to /feeds/validate
-   fail: user input err or whatever it's called
 
  extra: tool for looking up feed from website
 
@@ -59,4 +80,19 @@ todo
    user      (id, username, password, session_token, created_at)
    feed      (id, url, fetch_error, created_at, created_by)
    subscribe (id, user, feed, created_at, created_by)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

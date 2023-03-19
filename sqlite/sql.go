@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 
+	"github.com/SlyMarbo/rss"
 	_ "github.com/glebarez/go-sqlite"
 )
 
@@ -33,9 +34,8 @@ func New(path string) *DB {
 	// feed
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS feed (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                url TEXT NOT NULL,
+                url TEXT UNIQUE NOT NULL,
                 fetch_error TEXT,
-		created_by TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`)
 	if err != nil {
@@ -44,20 +44,33 @@ func New(path string) *DB {
 	// subscribe
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS subscribe (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id TEXT NOT NULL,
-                feed_id TEXT NOT NULL,
-		created_by TEXT NOT NULL,
+                user_id INTEGER NOT NULL,
+                feed_id INTEGER NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`)
 	if err != nil {
 		panic(err)
 	}
 
-	wrapper := DB{
-		sql: db,
+	// TODO: remove these, they're for testing
+	_, err = db.Exec("INSERT INTO feed (url) VALUES (?)", "https://j3s.sh/feed.atom")
+	if err != nil {
+		panic(err)
+	}
+	_, err = db.Exec("INSERT INTO feed (url) VALUES (?)", "https://sequentialread.com/rss/")
+	if err != nil {
+		panic(err)
+	}
+	_, err = db.Exec("INSERT INTO subscribe (user_id, feed_id) VALUES (1,  1)")
+	if err != nil {
+		panic(err)
+	}
+	_, err = db.Exec("INSERT INTO subscribe (user_id, feed_id) VALUES (1,  2)")
+	if err != nil {
+		panic(err)
 	}
 
-	return &wrapper
+	return &DB{sql: db}
 }
 
 // TODO: think more about errors
@@ -112,14 +125,68 @@ func (s *DB) UserExists(username string) bool {
 	return true
 }
 
-func (s *DB) GetFeeds(username string) bool {
-	var result string
-	err := s.sql.QueryRow("SELECT username FROM user WHERE username=?", username).Scan(&result)
-	if err == sql.ErrNoRows {
-		return false
-	}
+func (s *DB) GetAllFeedURLs() []string {
+	// TODO: BAD SELECT STATEMENT!! SORRY :( --wesley
+	rows, err := s.sql.Query("SELECT * FROM feed")
 	if err != nil {
 		panic(err)
 	}
-	return true
+	defer rows.Close()
+
+	var urls []string
+	for rows.Next() {
+		var url string
+		err = rows.Scan(&sql.RawBytes{}, &url, &sql.RawBytes{}, &sql.RawBytes{})
+		if err != nil {
+			panic(err)
+		}
+		urls = append(urls, url)
+	}
+	return urls
+}
+
+func (s *DB) GetUserFeedURLs(username string) []string {
+	uid := s.GetUserID(username)
+
+	// this query returns sql rows representing the list of
+	// rss feed urls the user is subscribed to
+	rows, err := s.sql.Query(`
+		SELECT f.url
+		FROM feed f
+		JOIN subscribe s ON f.id = s.feed_id
+		JOIN user u ON s.user_id = u.id
+		WHERE u.id = ?`, uid)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	var urls []string
+	for rows.Next() {
+		var url string
+		err = rows.Scan(&url)
+		if err != nil {
+			panic(err)
+		}
+		urls = append(urls, url)
+	}
+	return urls
+}
+
+func (s *DB) GetUserID(username string) int {
+	var uid int
+	err := s.sql.QueryRow("SELECT id FROM user WHERE username=?", username).Scan(&uid)
+	if err != nil {
+		panic(err)
+	}
+	return uid
+}
+
+// WriteFeed writes an rss feed to the database for permanent storage
+func (s *DB) WriteFeed(f *rss.Feed) {
+	_, err := s.sql.Exec(`INSERT INTO feed(url) VALUES(?)
+				ON CONFLICT(url) DO UPDATE SET url=?`, f.Link, f.Link)
+	if err != nil {
+		panic(err)
+	}
 }
