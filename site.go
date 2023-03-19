@@ -44,8 +44,8 @@ func (s *Site) indexHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `<!DOCTYPE html>
 			<title>%s</title>
 			<p> { %s <a href=/logout>logout</a> }
-			<p> <a href="/%s">view your feed</a>
-			<p> <a href="/feeds">edit your feed</a>`, s.title, username, username)
+			<p> <a href="/%s">view feeds</a>
+			<p> <a href="/feeds">edit feeds</a>`, s.title, username, username)
 	} else {
 		fmt.Fprintf(w, `<!DOCTYPE html>
 			<title>%s</title>
@@ -170,7 +170,7 @@ func (s *Site) feedsHandler(w http.ResponseWriter, r *http.Request) {
 
 	feeds := s.reaper.GetUserFeeds(s.username(r))
 	if len(feeds) > 0 {
-		fmt.Fprintf(w, `<h3>subscribed feeds</h3>
+		fmt.Fprintf(w, `<h3>your feeds</h3>
 				<table>
 				<thead>
 				<tr>
@@ -187,7 +187,18 @@ func (s *Site) feedsHandler(w http.ResponseWriter, r *http.Request) {
 				<tr>`, feed.Link, feed.Title, feed.UpdateURL)
 		}
 		fmt.Fprintf(w, `</tbody>
-				</table>`)
+				</table>
+				<h3>feed urls</h3>
+				<p>use this box to add/remove URLs that you'd like to follow
+				<form action="/feeds/validate" method="post">
+					<textarea rows="10" cols="72">`)
+		for _, feed := range feeds {
+			fmt.Fprintf(w, "%s\n", feed.UpdateURL)
+		}
+		fmt.Fprintf(w, `	</textarea>
+				<br>
+				<input type="submit" value="submit">
+				</form>`)
 	}
 	// TODO: textbox with feed.URL
 	// TODO: validate button
