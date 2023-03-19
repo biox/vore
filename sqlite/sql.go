@@ -111,6 +111,13 @@ func (s *DB) Subscribe(username string, feedURL string) {
 	}
 }
 
+func (s *DB) UnsubscribeAll(username string) {
+	_, err := s.sql.Exec("DELETE FROM subscribe WHERE user_id=?", s.GetUserID(username))
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (s *DB) UserExists(username string) bool {
 	var result string
 	err := s.sql.QueryRow("SELECT username FROM user WHERE username=?", username).Scan(&result)

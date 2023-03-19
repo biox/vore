@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -169,10 +170,9 @@ func (s *Site) feedsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	feeds := s.reaper.GetUserFeeds(s.username(r))
-	if len(feeds) > 0 {
-		fmt.Fprintf(w, `<pre>you are subscribed to %d feeds</pre>`, len(feeds))
-		for _, feed := range feeds {
-			fmt.Fprintf(w, `
+	fmt.Fprintf(w, `<pre>you are subscribed to %d feeds</pre>`, len(feeds))
+	for _, feed := range feeds {
+		fmt.Fprintf(w, `
 <details>
 <summary>%s</summary>
 <pre>
@@ -181,18 +181,17 @@ url: %s
 posts: %d
 </pre>
 </details>`, feed.Title, feed.Title, feed.UpdateURL, len(feed.Items))
-		}
-		fmt.Fprintf(w, `<pre>add/remove feed URLs to this box to change your subscriptions</pre>
+	}
+	fmt.Fprintf(w, `<pre>add/remove feed URLs to this box to change your subscriptions</pre>
 				<form method="POST" action="/feeds/submit">
 				<textarea name="submit" rows="10" cols="72">`)
-		for _, feed := range feeds {
-			fmt.Fprintf(w, "%s\n", feed.UpdateURL)
-		}
-		fmt.Fprintf(w, `</textarea>
+	for _, feed := range feeds {
+		fmt.Fprintf(w, "%s\n", feed.UpdateURL)
+	}
+	fmt.Fprintf(w, `</textarea>
 				<br>
 				<input type="submit" value="update feeds">
 				</form>`)
-	}
 	// TODO: textbox with feed.URL
 	// TODO: validate button
 }
@@ -213,6 +212,7 @@ func (s *Site) feedsSubmitHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: validate user input moar
 	feeds := strings.Split(inputData, "\r\n")
+	s.db.UnsubscribeAll(s.username(r))
 	for _, feed := range feeds {
 		// TODO: show diff before submission (like tf plan)
 		// TODO: check if feed exists in db already?
@@ -221,9 +221,15 @@ func (s *Site) feedsSubmitHandler(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		err := s.reaper.Add(feed)
-		if err != nil {
+		if err == io.EOF {
+			http.Error(w, "400 bad request: could not fetch "+feed, 400)
 			fmt.Println(err)
-			continue
+			return
+		}
+		if err != nil {
+			http.Error(w, "400 bad request: "+err.Error(), 400)
+			fmt.Println(err)
+			return
 		}
 		s.db.WriteFeed(feed)
 		s.db.Subscribe(s.username(r), feed)

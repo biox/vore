@@ -99,7 +99,15 @@ func (r *Reaper) GetUserFeeds(username string) []rss.Feed {
 			}
 		}
 	}
+
+	r.SortFeeds(result)
 	return result
+}
+
+func (r *Reaper) SortFeeds(f []rss.Feed) {
+	sort.Slice(f, func(i, j int) bool {
+		return f[i].Title < f[j].Title
+	})
 }
 
 func (r *Reaper) SortFeedItems(f []rss.Feed) []rss.Item {
