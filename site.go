@@ -129,7 +129,8 @@ func (s *Site) userHandler(w http.ResponseWriter, r *http.Request) {
 	if !methodAllowed(w, r, "GET") {
 		return
 	}
-	fmt.Fprintf(w, "<!DOCTYPE html>")
+	fmt.Fprintf(w, `<!DOCTYPE html>
+			<title>%s</title>`, s.title)
 
 	username := strings.TrimPrefix(r.URL.Path, "/")
 	feeds := s.reaper.GetUserFeeds(username)
@@ -157,22 +158,36 @@ func (s *Site) feedsHandler(w http.ResponseWriter, r *http.Request) {
 	if !methodAllowed(w, r, "GET") {
 		return
 	}
+	fmt.Fprintf(w, `<!DOCTYPE html>
+			<title>%s</title>`, s.title)
 
 	if !s.loggedIn(r) {
-		fmt.Fprintf(w, `<!DOCTYPE html>
-			<p>⚠️ you are not logged in⚠️
+		fmt.Fprintf(w,
+			`<p>⚠️ you are not logged in⚠️
 			<p>please click the skull: <a href="/login">💀</a>`)
 		return
 	}
 
-	username := s.username(r)
-	fmt.Fprintf(w, `<!DOCTYPE html>
-		<title>%s</title>
-		<p>%s's feeds:`, s.title, username)
-	feeds := s.reaper.GetUserFeeds(username)
-	for _, feed := range feeds {
-		fmt.Fprintf(w, "<p>%s", feed.Title)
-		fmt.Fprintf(w, "<p>%s", feed.Link)
+	feeds := s.reaper.GetUserFeeds(s.username(r))
+	if len(feeds) > 0 {
+		fmt.Fprintf(w, `<h3>subscribed feeds</h3>
+				<table>
+				<thead>
+				<tr>
+					<th>title</th>
+					<th>url</th>
+				</tr>
+				</thead>
+				<tbody>`)
+		for _, feed := range feeds {
+			fmt.Fprintf(w, `
+				<tr>
+					<td><a href="%s">%s</a></td>
+					<td><p>%s</td>
+				<tr>`, feed.Link, feed.Title, feed.UpdateURL)
+		}
+		fmt.Fprintf(w, `</tbody>
+				</table>`)
 	}
 	// TODO: textbox with feed.URL
 	// TODO: validate button
