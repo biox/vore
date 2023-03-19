@@ -51,24 +51,6 @@ func New(path string) *DB {
 		panic(err)
 	}
 
-	// TODO: remove these, they're for testing
-	_, err = db.Exec("INSERT INTO feed (url) VALUES (?)", "https://j3s.sh/feed.atom")
-	if err != nil {
-		panic(err)
-	}
-	_, err = db.Exec("INSERT INTO feed (url) VALUES (?)", "https://sequentialread.com/rss/")
-	if err != nil {
-		panic(err)
-	}
-	_, err = db.Exec("INSERT INTO subscribe (user_id, feed_id) VALUES (1,  1)")
-	if err != nil {
-		panic(err)
-	}
-	_, err = db.Exec("INSERT INTO subscribe (user_id, feed_id) VALUES (1,  2)")
-	if err != nil {
-		panic(err)
-	}
-
 	return &DB{sql: db}
 }
 
