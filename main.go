@@ -25,6 +25,7 @@ func main() {
 		http.NotFound(w, r)
 	})
 	mux.HandleFunc("/feeds", s.feedsHandler)
+	mux.HandleFunc("/feeds/submit", s.feedsSubmitHandler)
 	mux.HandleFunc("/login", s.loginHandler)
 	mux.HandleFunc("/logout", s.logoutHandler)
 	mux.HandleFunc("/register", s.registerHandler)

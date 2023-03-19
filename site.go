@@ -170,38 +170,66 @@ func (s *Site) feedsHandler(w http.ResponseWriter, r *http.Request) {
 
 	feeds := s.reaper.GetUserFeeds(s.username(r))
 	if len(feeds) > 0 {
-		fmt.Fprintf(w, `<h3>your feeds</h3>
-				<table>
-				<thead>
-				<tr>
-					<th>title</th>
-					<th>url</th>
-				</tr>
-				</thead>
-				<tbody>`)
+		fmt.Fprintf(w, `<pre>you are subscribed to %d feeds</pre>`, len(feeds))
 		for _, feed := range feeds {
 			fmt.Fprintf(w, `
-				<tr>
-					<td><a href="%s">%s</a></td>
-					<td><p>%s</td>
-				<tr>`, feed.Link, feed.Title, feed.UpdateURL)
+<details>
+<summary>%s</summary>
+<pre>
+title: %s
+url: %s
+posts: %d
+</pre>
+</details>`, feed.Title, feed.Title, feed.UpdateURL, len(feed.Items))
 		}
-		fmt.Fprintf(w, `</tbody>
-				</table>
-				<h3>feed urls</h3>
-				<p>use this box to add/remove URLs that you'd like to follow
-				<form action="/feeds/validate" method="post">
-					<textarea rows="10" cols="72">`)
+		fmt.Fprintf(w, `<pre>add/remove feed URLs to this box to change your subscriptions</pre>
+				<form method="POST" action="/feeds/submit">
+				<textarea name="submit" rows="10" cols="72">`)
 		for _, feed := range feeds {
 			fmt.Fprintf(w, "%s\n", feed.UpdateURL)
 		}
-		fmt.Fprintf(w, `	</textarea>
+		fmt.Fprintf(w, `</textarea>
 				<br>
-				<input type="submit" value="submit">
+				<input type="submit" value="update feeds">
 				</form>`)
 	}
 	// TODO: textbox with feed.URL
 	// TODO: validate button
+}
+
+func (s *Site) feedsSubmitHandler(w http.ResponseWriter, r *http.Request) {
+	if !methodAllowed(w, r, "POST") {
+		return
+	}
+	if !s.loggedIn(r) {
+		http.Error(w, "401 unauthorized", 401)
+		return
+	}
+	inputData := r.FormValue("submit")
+	if inputData == "" {
+		http.Error(w, "400 bad request: you must submit data", 400)
+		return
+	}
+
+	// TODO: validate user input moar
+	feeds := strings.Split(inputData, "\r\n")
+	for _, feed := range feeds {
+		// TODO: show diff before submission (like tf plan)
+		// TODO: check if feed exists in db already?
+		// TODO: validate that title exists
+		if feed == "" {
+			continue
+		}
+		err := s.reaper.Add(feed)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		s.db.WriteFeed(feed)
+		s.db.Subscribe(s.username(r), feed)
+	}
+
+	http.Redirect(w, r, "/feeds", http.StatusSeeOther)
 }
 
 // username fetches a client's username based

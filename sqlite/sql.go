@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"log"
 
-	"github.com/SlyMarbo/rss"
 	_ "github.com/glebarez/go-sqlite"
 )
 
@@ -113,6 +112,23 @@ func (s *DB) AddUser(username string, passwordHash string) {
 	}
 }
 
+func (s *DB) Subscribe(username string, feedURL string) {
+	uid := s.GetUserID(username)
+	fid := s.GetFeedID(feedURL)
+	var id int
+	err := s.sql.QueryRow("SELECT id FROM subscribe WHERE user_id=? AND feed_id=?", uid, fid).Scan(&id)
+	if err == sql.ErrNoRows {
+		_, err := s.sql.Exec("INSERT INTO subscribe (user_id, feed_id) VALUES (?, ?)", uid, fid)
+		if err != nil {
+			panic(err)
+		}
+		return
+	}
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (s *DB) UserExists(username string) bool {
 	var result string
 	err := s.sql.QueryRow("SELECT username FROM user WHERE username=?", username).Scan(&result)
@@ -182,10 +198,20 @@ func (s *DB) GetUserID(username string) int {
 	return uid
 }
 
+func (s *DB) GetFeedID(feedURL string) int {
+	var fid int
+	err := s.sql.QueryRow("SELECT id FROM feed WHERE url=?", feedURL).Scan(&fid)
+	if err != nil {
+		panic(err)
+	}
+	return fid
+}
+
 // WriteFeed writes an rss feed to the database for permanent storage
-func (s *DB) WriteFeed(f *rss.Feed) {
+// if the given feed already exists, WriteFeed does nothing.
+func (s *DB) WriteFeed(url string) {
 	_, err := s.sql.Exec(`INSERT INTO feed(url) VALUES(?)
-				ON CONFLICT(url) DO UPDATE SET url=?`, f.Link, f.Link)
+				ON CONFLICT(url) DO NOTHING`, url)
 	if err != nil {
 		panic(err)
 	}

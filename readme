@@ -41,7 +41,7 @@ todo
    POST /feeds/validate
    logged out: unauthorized. click here to login.
 
- [ ] POST /feeds/validate
+ TODO: POST /feeds/validate
     make sure each url is resolvable
     check if feed exists in db already
       if it does, do nothing
@@ -50,7 +50,7 @@ todo
     redir -> /feeds/validate
     logged out: 401 unauthorized
 
- [ ] GET /feeds/validate
+ TODO: GET /feeds/validate
     shows feed diff
     "if this all looks correct, hit submit:"
     button: submit

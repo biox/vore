@@ -48,13 +48,19 @@ func (r *Reaper) Start() {
 
 	for {
 		r.UpdateAll()
-		time.Sleep(12 * time.Hour)
+		time.Sleep(2 * time.Hour)
 	}
 }
 
-// Add fetches the given feed url, appends it to r.Feeds, and
-// flushes it to the database
+// Add fetches the given feed url and appends it to r.Feeds
+// If the given URL is already in reaper.Feeds, Add will do nothing
 func (r *Reaper) Add(url string) error {
+	for i := range r.feeds {
+		if r.feeds[i].UpdateURL == url {
+			return nil
+		}
+	}
+
 	feed, err := rss.Fetch(url)
 	if err != nil {
 		return err
@@ -64,16 +70,7 @@ func (r *Reaper) Add(url string) error {
 	r.feeds = append(r.feeds, *feed)
 	r.mu.Unlock()
 
-	r.db.WriteFeed(feed)
 	return nil
-}
-
-// FlushAll flushes all feeds to the database
-func (r *Reaper) FlushAll() {
-	// TODO: do we need this?
-	for _, feed := range r.feeds {
-		r.db.WriteFeed(&feed)
-	}
 }
 
 // UpdateAll fetches every feed & attempts updating them
