@@ -9,7 +9,6 @@ import (
 func main() {
 	s := New()
 	mux := http.NewServeMux()
-
 	// since "/" is a wildcard, this anonymous function acts
 	// as a router for patterns that can't be registered at
 	// start time. e.g. /j3s or /j3s/feeds
@@ -30,6 +29,6 @@ func main() {
 	mux.HandleFunc("/logout", s.logoutHandler)
 	mux.HandleFunc("/register", s.registerHandler)
 
-	fmt.Printf("vore: listening on http://localhost:5544")
+	fmt.Println("vore: listening on http://localhost:5544")
 	panic(http.ListenAndServe(":5544", mux))
 }
