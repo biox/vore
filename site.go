@@ -212,7 +212,6 @@ func (s *Site) feedsSubmitHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: validate user input moar
 	feeds := strings.Split(inputData, "\r\n")
-	s.db.UnsubscribeAll(s.username(r))
 	for _, feed := range feeds {
 		// TODO: show diff before submission (like tf plan)
 		// TODO: check if feed exists in db already?
@@ -231,6 +230,10 @@ func (s *Site) feedsSubmitHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 			return
 		}
+	}
+
+	s.db.UnsubscribeAll(s.username(r))
+	for _, feed := range feeds {
 		s.db.WriteFeed(feed)
 		s.db.Subscribe(s.username(r), feed)
 	}
