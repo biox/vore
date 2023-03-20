@@ -1,0 +1,16 @@
+{{ define "user" }}
+{{ template "head" . }}
+{{ template "nav" . }}
+
+<!-- <h3> {{ .Data.User }}'s feed</h3> -->
+{{ $length := len .Data.Items }} {{ if eq $length 0 }}
+<p> no feeds found 😭</p>
+<p> consider <a href="/feeds">adding some</a></p>
+{{ end }}
+
+{{ range .Data.Items }}
+<p> <a href="{{ .Link }}">{{ .Title }}</a>
+{{ end }}
+
+{{ template "tail" . }}
+{{ end }}

@@ -1,0 +1,47 @@
+{{ define "feeds" }}
+{{ template "head" . }}
+{{ template "nav" . }}
+{{ if .LoggedIn }}
+{{ $length := len .Data }}
+{{ if eq $length 1 }}
+<p>you're subscribed to 1 feed
+{{ else if eq $length 0 }}
+<p>you haven't subscribed to any feeds yet ⁉️
+<p>here's some urls to play with. copypasta them into the text box and click update.
+<pre>
+https://100r.co/links/rss.xml
+https://begriffs.com/atom.xml
+https://cyberia.club/blog/blog.xml
+https://davebucklin.com/feed.xml
+https://herman.bearblog.dev/feed/
+https://j3s.sh/feed.atom
+https://katherine.cox-buday.com/rss.xml
+https://sequentialread.com/rss
+</pre>
+{{ else }}
+<p>you're subscribed to {{ len .Data }} feeds 🗿
+{{ end }}
+<form method="POST" action="/feeds/submit">
+<textarea name="submit" rows="10" cols="50">
+{{ range .Data -}}
+{{ .UpdateURL }}
+{{ end -}}
+</textarea>
+<br>
+<input type="submit" value="update feeds">
+</form>
+{{ range .Data }}
+<pre>
+==> {{ .Title }}
+
+    title: {{ .Title }}
+      url: {{ .UpdateURL }}
+    items: {{ len .Items }}
+
+</pre>
+{{ end }}
+{{ else }}
+	<p>⚠️ unauthorized: you are not logged in
+{{ end }}
+{{ template "tail" . }}
+{{ end }}

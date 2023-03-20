@@ -1,0 +1,31 @@
+html {
+  font-family: monospace;
+  max-width: 500px;
+  margin: 10px auto;
+  /* make sure the scrollbar is always shown so
+     the width doesnt change between pages */
+  overflow-y: scroll;
+  font-size: 120%;
+}
+
+h2 {
+  text-align: center;
+}
+
+.float-right {
+	float: right;
+}
+
+nav {
+	font-weight: bold;
+}
+
+nav a {
+  text-decoration: underline;
+  color: #000;
+}
+
+nav a:hover {
+  background-color: #000;
+  color: #fff;
+}

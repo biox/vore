@@ -2,13 +2,17 @@ package main
 
 import (
 	"fmt"
-	"io"
+	"io/ioutil"
 	"net/http"
+	"net/url"
+	"path/filepath"
 	"strings"
+	"text/template"
 
 	"git.j3s.sh/vore/lib"
 	"git.j3s.sh/vore/reaper"
 	"git.j3s.sh/vore/sqlite"
+	"github.com/SlyMarbo/rss"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -37,25 +41,18 @@ func New() *Site {
 }
 
 func (s *Site) indexHandler(w http.ResponseWriter, r *http.Request) {
-	if !methodAllowed(w, r, "GET") {
+	if !s.methodAllowed(w, r, "GET") {
 		return
 	}
 	if s.loggedIn(r) {
-		username := s.username(r)
-		fmt.Fprintf(w, `<!DOCTYPE html>
-			<title>%s</title>
-			<p> { %s <a href=/logout>logout</a> }
-			<p> <a href="/%s">view feeds</a>
-			<p> <a href="/feeds">edit feeds</a>`, s.title, username, username)
+		http.Redirect(w, r, "/"+s.username(r), http.StatusSeeOther)
 	} else {
-		fmt.Fprintf(w, `<!DOCTYPE html>
-			<title>%s</title>
-			<a href="/login">login</a>`, s.title)
+		s.renderPage(w, r, "index", nil)
 	}
 }
 
 func (s *Site) loginHandler(w http.ResponseWriter, r *http.Request) {
-	if !methodAllowed(w, r, "GET", "POST") {
+	if !s.methodAllowed(w, r, "GET", "POST") {
 		return
 	}
 	if r.Method == "GET" {
@@ -97,7 +94,7 @@ func (s *Site) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 // TODO: make this take a POST only in accordance w/ some spec
 func (s *Site) logoutHandler(w http.ResponseWriter, r *http.Request) {
-	if !methodAllowed(w, r, "GET", "POST") {
+	if !s.methodAllowed(w, r, "GET", "POST") {
 		return
 	}
 	http.SetCookie(w, &http.Cookie{
@@ -108,136 +105,114 @@ func (s *Site) logoutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Site) registerHandler(w http.ResponseWriter, r *http.Request) {
-	if !methodAllowed(w, r, "POST") {
+	if !s.methodAllowed(w, r, "POST") {
 		return
 	}
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 	err := s.register(username, password)
 	if err != nil {
-		internalServerError(w, "failed to register user")
+		s.renderErr(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	err = s.login(w, username, password)
 	if err != nil {
-		internalServerError(w, "extremely weird login error")
+		s.renderErr(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (s *Site) userHandler(w http.ResponseWriter, r *http.Request) {
-	if !methodAllowed(w, r, "GET") {
+	if !s.methodAllowed(w, r, "GET") {
 		return
 	}
-	fmt.Fprintf(w, `<!DOCTYPE html>
-			<title>%s</title>`, s.title)
 
 	username := strings.TrimPrefix(r.URL.Path, "/")
-	feeds := s.reaper.GetUserFeeds(username)
-	if len(feeds) == 0 {
-		fmt.Fprintf(w, "%s has no feeds 😭", username)
-		return
+	items := s.reaper.SortFeedItemsByDate(s.reaper.GetUserFeeds(username))
+	data := struct {
+		User  string
+		Items []rss.Item
+	}{
+		User:  username,
+		Items: items,
 	}
 
-	sortedItems := s.reaper.SortFeedItems(feeds)
-	for i := range sortedItems {
-		fmt.Fprintf(w, `<p><a href="%s">%s</a>`,
-			sortedItems[i].Link, sortedItems[i].Title)
-	}
+	s.renderPage(w, r, "user", data)
+
 }
 
-// [ ] GET /feeds
-//
-//	> if no feeds, /discover for ideas
-//	pretty-print your feeds
-//	<text box with pre-populated list of your feed urls, one per line>
-//	button: validate
-//	POST /feeds/validate
-//	logged out: unauthorized. click here to login.
 func (s *Site) feedsHandler(w http.ResponseWriter, r *http.Request) {
-	if !methodAllowed(w, r, "GET") {
-		return
-	}
-	fmt.Fprintf(w, `<!DOCTYPE html>
-			<title>%s</title>`, s.title)
-
-	if !s.loggedIn(r) {
-		fmt.Fprintf(w,
-			`<p>⚠️ you are not logged in⚠️
-			<p>please click the skull: <a href="/login">💀</a>`)
+	if !s.methodAllowed(w, r, "GET") {
 		return
 	}
 
-	feeds := s.reaper.GetUserFeeds(s.username(r))
-	fmt.Fprintf(w, `<pre>you are subscribed to %d feeds</pre>`, len(feeds))
-	for _, feed := range feeds {
-		fmt.Fprintf(w, `
-<details>
-<summary>%s</summary>
-<pre>
-title: %s
-url: %s
-posts: %d
-</pre>
-</details>`, feed.Title, feed.Title, feed.UpdateURL, len(feed.Items))
+	var feeds []rss.Feed
+	if s.loggedIn(r) {
+		feeds = s.reaper.GetUserFeeds(s.username(r))
 	}
-	fmt.Fprintf(w, `<pre>add/remove feed URLs to this box to change your subscriptions</pre>
-				<form method="POST" action="/feeds/submit">
-				<textarea name="submit" rows="10" cols="72">`)
-	for _, feed := range feeds {
-		fmt.Fprintf(w, "%s\n", feed.UpdateURL)
-	}
-	fmt.Fprintf(w, `</textarea>
-				<br>
-				<input type="submit" value="update feeds">
-				</form>`)
+	s.renderPage(w, r, "feeds", feeds)
+
 	// TODO: textbox with feed.URL
 	// TODO: validate button
 }
 
+// TODO:
+//
+//	show diff before submission (like tf plan)
+//	check if feed exists in db already?
+//	validate that title exists
 func (s *Site) feedsSubmitHandler(w http.ResponseWriter, r *http.Request) {
-	if !methodAllowed(w, r, "POST") {
+	if !s.methodAllowed(w, r, "POST") {
 		return
 	}
 	if !s.loggedIn(r) {
-		http.Error(w, "401 unauthorized", 401)
-		return
-	}
-	inputData := r.FormValue("submit")
-	if inputData == "" {
-		http.Error(w, "400 bad request: you must submit data", 400)
+		s.renderErr(w, "", http.StatusUnauthorized)
 		return
 	}
 
-	// TODO: validate user input moar
-	feeds := strings.Split(inputData, "\r\n")
-	for _, feed := range feeds {
-		// TODO: show diff before submission (like tf plan)
-		// TODO: check if feed exists in db already?
-		// TODO: validate that title exists
-		if feed == "" {
+	// validate user input
+	var validatedURLs []string
+	for _, inputURL := range strings.Split(r.FormValue("submit"), "\r\n") {
+		inputURL = strings.TrimSpace(inputURL)
+		inputURL = strings.ToLower(inputURL)
+		if inputURL == "" {
 			continue
 		}
-		err := s.reaper.Add(feed)
-		if err == io.EOF {
-			http.Error(w, "400 bad request: could not fetch "+feed, 400)
-			fmt.Println(err)
+
+		// if the entry is already in reaper, don't validate
+		if s.reaper.HasFeed(inputURL) {
+			validatedURLs = append(validatedURLs, inputURL)
+			continue
+		}
+		if _, err := url.ParseRequestURI(inputURL); err != nil {
+			e := fmt.Sprintf("can't parse url '%s': %s", inputURL, err)
+			s.renderErr(w, e, http.StatusBadRequest)
 			return
 		}
+		validatedURLs = append(validatedURLs, inputURL)
+	}
+
+	// write to reaper + db
+	for _, u := range validatedURLs {
+		// if it's in reaper, it's in the db, safe to skip
+		if s.reaper.HasFeed(u) {
+			continue
+		}
+		err := s.reaper.Fetch(u)
 		if err != nil {
-			http.Error(w, "400 bad request: "+err.Error(), 400)
-			fmt.Println(err)
+			e := fmt.Sprintf("reaper: can't fetch '%s' %s", u, err)
+			s.renderErr(w, e, http.StatusBadRequest)
 			return
 		}
+		s.db.WriteFeed(u)
 	}
 
+	// subscribe to all listed feeds exclusively
 	s.db.UnsubscribeAll(s.username(r))
-	for _, feed := range feeds {
-		s.db.WriteFeed(feed)
-		s.db.Subscribe(s.username(r), feed)
+	for _, url := range validatedURLs {
+		s.db.Subscribe(s.username(r), url)
 	}
-
 	http.Redirect(w, r, "/feeds", http.StatusSeeOther)
 }
 
@@ -294,4 +269,80 @@ func (s *Site) register(username string, password string) error {
 
 	s.db.AddUser(username, string(hashedPassword))
 	return nil
+}
+
+// renderPage renders the given page and passes data to the
+// template execution engine. it's normally the last thing a
+// handler should do tbh.
+func (s *Site) renderPage(w http.ResponseWriter, r *http.Request, page string, data any) {
+	tmplFiles := filepath.Join("files", "*.tmpl.html")
+	tmpl := template.Must(template.ParseGlob(tmplFiles))
+
+	// we read the stylesheet in order to render it inline
+	cssFile := filepath.Join("files", "style.css")
+	stylesheet, err := ioutil.ReadFile(cssFile)
+	if err != nil {
+		panic(err)
+	}
+
+	// fields on this anon struct are generally
+	// pulled out of Data when they're globally required
+	// callers should jam anything they want into Data
+	pageData := struct {
+		Title      string
+		Username   string
+		LoggedIn   bool
+		StyleSheet string
+		Data       any
+	}{
+		Title:      page + " | " + s.title,
+		Username:   s.username(r),
+		LoggedIn:   s.loggedIn(r),
+		StyleSheet: string(stylesheet),
+		Data:       data,
+	}
+
+	err = tmpl.ExecuteTemplate(w, page, pageData)
+	if err != nil {
+		s.renderErr(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// renderErr sets the correct http status in the header,
+// optionally decorates certain errors, then renders the err page
+func (s *Site) renderErr(w http.ResponseWriter, error string, code int) {
+	var prefix string
+	switch code {
+	case http.StatusBadRequest:
+		prefix = "400 bad request\n"
+	case http.StatusUnauthorized:
+		prefix = "401 unauthorized\n"
+	case http.StatusMethodNotAllowed:
+		prefix = "405 method not allowed\n"
+		prefix += "request method: "
+	case http.StatusInternalServerError:
+		prefix = "(╥﹏╥) oopsie woopsie, uwu\n"
+		prefix += "we made a fucky wucky (╥﹏╥)\n\n"
+		prefix += "500 internal server error\n"
+	}
+	http.Error(w, prefix+error, code)
+}
+
+// methodAllowed takes an http w/r, and returns true if the
+// http requests method is in teh allowedMethods list.
+// if methodNotAllowed returns false, it has already
+// written a request & it's on the caller to close it.
+func (s *Site) methodAllowed(w http.ResponseWriter, r *http.Request, allowedMethods ...string) bool {
+	allowed := false
+	for _, m := range allowedMethods {
+		if m == r.Method {
+			allowed = true
+		}
+	}
+	if allowed == false {
+		w.Header().Set("Allow", strings.Join(allowedMethods, ", "))
+		s.renderErr(w, r.Method, http.StatusMethodNotAllowed)
+	}
+	return allowed
 }

@@ -132,7 +132,7 @@ func (s *DB) UserExists(username string) bool {
 
 func (s *DB) GetAllFeedURLs() []string {
 	// TODO: BAD SELECT STATEMENT!! SORRY :( --wesley
-	rows, err := s.sql.Query("SELECT * FROM feed")
+	rows, err := s.sql.Query("SELECT url FROM feed")
 	if err != nil {
 		panic(err)
 	}
@@ -141,7 +141,7 @@ func (s *DB) GetAllFeedURLs() []string {
 	var urls []string
 	for rows.Next() {
 		var url string
-		err = rows.Scan(&sql.RawBytes{}, &url, &sql.RawBytes{}, &sql.RawBytes{})
+		err = rows.Scan(&url)
 		if err != nil {
 			panic(err)
 		}
@@ -161,6 +161,9 @@ func (s *DB) GetUserFeedURLs(username string) []string {
 		JOIN subscribe s ON f.id = s.feed_id
 		JOIN user u ON s.user_id = u.id
 		WHERE u.id = ?`, uid)
+	if err == sql.ErrNoRows {
+		return []string{}
+	}
 	if err != nil {
 		panic(err)
 	}
@@ -201,6 +204,19 @@ func (s *DB) GetFeedID(feedURL string) int {
 func (s *DB) WriteFeed(url string) {
 	_, err := s.sql.Exec(`INSERT INTO feed(url) VALUES(?)
 				ON CONFLICT(url) DO NOTHING`, url)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// WriteFeed writes an rss feed to the database for permanent storage
+// if the given feed already exists, WriteFeed does nothing.
+func (s *DB) SetFeedFetchError(url string, fetchErr error) {
+	var errStr string
+	if fetchErr != nil {
+		errStr = fetchErr.Error()
+	}
+	_, err := s.sql.Exec(`UPDATE feed SET fetch_error=? WHERE url=?`, errStr, url)
 	if err != nil {
 		panic(err)
 	}

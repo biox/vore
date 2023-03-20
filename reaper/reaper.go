@@ -39,7 +39,7 @@ func (r *Reaper) Start() {
 	urls := r.db.GetAllFeedURLs()
 
 	for _, url := range urls {
-		// Setting UpdateURL lets us defer the actual fetching
+		// Setting UpdateURL lets us defer fetching
 		feed := rss.Feed{
 			UpdateURL: url,
 		}
@@ -47,45 +47,57 @@ func (r *Reaper) Start() {
 	}
 
 	for {
-		r.UpdateAll()
+		r.updateAll()
 		time.Sleep(2 * time.Hour)
 	}
 }
 
-// Add fetches the given feed url and appends it to r.Feeds
-// If the given URL is already in reaper.Feeds, Add will do nothing
-func (r *Reaper) Add(url string) error {
-	for i := range r.feeds {
-		if r.feeds[i].UpdateURL == url {
-			return nil
-		}
+// Add the given rss feed to Reaper for maintenance.
+// If the given feed is already in reaper.Feeds, Add does nothing.
+func (r *Reaper) addFeed(f rss.Feed) {
+	if !r.HasFeed(f.UpdateURL) {
+		r.mu.Lock()
+		r.feeds = append(r.feeds, f)
+		r.mu.Unlock()
 	}
-
-	feed, err := rss.Fetch(url)
-	if err != nil {
-		return err
-	}
-
-	r.mu.Lock()
-	r.feeds = append(r.feeds, *feed)
-	r.mu.Unlock()
-
-	return nil
 }
 
 // UpdateAll fetches every feed & attempts updating them
-func (r *Reaper) UpdateAll() {
+// asynchronously, then prints the duration of the sync
+func (r *Reaper) updateAll() {
 	start := time.Now()
 	fmt.Printf("reaper: fetching %d feeds\n", len(r.feeds))
+
+	var wg sync.WaitGroup
+	wg.Add(len(r.feeds))
 	for i := range r.feeds {
-		err := r.feeds[i].Update()
-		if err != nil {
-			fmt.Println(err)
-			// TODO: write err to db?
+		go func(i int) {
+			defer wg.Done()
+			r.updateFeed(&r.feeds[i])
+		}(i)
+	}
+	go func() {
+		wg.Wait()
+		fmt.Printf("reaper: fetched %d feeds in %s\n", len(r.feeds), time.Since(start))
+	}()
+}
+
+// updateFeed triggers a fetch on the given feed,
+// and sets a fetch error in the db if there is one.
+func (r *Reaper) updateFeed(f *rss.Feed) {
+	err := f.Update()
+	r.db.SetFeedFetchError(f.UpdateURL, err)
+}
+
+// Have checks whether a given url is represented
+// in the reaper cache.
+func (r *Reaper) HasFeed(url string) bool {
+	for i := range r.feeds {
+		if r.feeds[i].UpdateURL == url {
+			return true
 		}
 	}
-	fmt.Printf("reaper: fetched %d feeds in %s\n",
-		len(r.feeds), time.Since(start))
+	return false
 }
 
 // GetUserFeeds returns a list of feeds
@@ -110,7 +122,7 @@ func (r *Reaper) SortFeeds(f []rss.Feed) {
 	})
 }
 
-func (r *Reaper) SortFeedItems(f []rss.Feed) []rss.Item {
+func (r *Reaper) SortFeedItemsByDate(f []rss.Feed) []rss.Item {
 	var posts []rss.Item
 	for _, f := range f {
 		for _, i := range f.Items {
@@ -118,9 +130,21 @@ func (r *Reaper) SortFeedItems(f []rss.Feed) []rss.Item {
 		}
 	}
 
-	// magick slice sorter by date
 	sort.Slice(posts, func(i, j int) bool {
 		return posts[i].Date.After(posts[j].Date)
 	})
 	return posts
+}
+
+// FetchFeed attempts to fetch a feed from a given url, marshal
+// it into a feed object, and add it to Reaper.
+func (r *Reaper) Fetch(url string) error {
+	feed, err := rss.Fetch(url)
+	if err != nil {
+		return err
+	}
+
+	r.addFeed(*feed)
+
+	return nil
 }
