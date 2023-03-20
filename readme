@@ -1,14 +1,14 @@
-           vore 
-      a feed reader
-      
+               vore 
+     a simple, multi-tenant feed reader
+
   features:
-    - minimal & reliable
-    - handles rss & atom feeds
-    - updates all feeds periodically
-    - shows you a date-ordered list of posts
+    - rss and atom support
+    - minimal, simple, reliable, fast
+    - refresh your feeds automatically
+    - display a chronological list of feed items
     - open source & free of charge forever
-    - (and not in the shitty open core kind of way)
-    - jes built it
+      (not the shitty open core kind of way)
+    - <a href="https://j3s.sh">jes</a> built it
 
   anti-features:
     - no tags
@@ -16,8 +16,3 @@
     - no javascript
     - no unread indicators or push notifs
     - no comments, upvotes, or ranks
-
-  todo
-    - tool for looking up feeds
-    - more thorough validation
-    - handle unfetchable feeds

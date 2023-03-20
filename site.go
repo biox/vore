@@ -333,10 +333,12 @@ func (s *Site) methodAllowed(w http.ResponseWriter, r *http.Request, allowedMeth
 func (s *Site) randomCutePhrase() string {
 	phrases := []string{
 		"nom nom posts (๑ᵔ⤙ᵔ๑)",
-		"cthulhu says hi ^(;,;)^",
-		"( -_•)╦̵̵̿╤─ - - vore",
+		"^(;,;)^ vawr",
+		"( -_•)╦̵̵̿╤─ - - -- - vore",
 		"devouring feeds since 2023",
 		"tfw new rss post (⊙ _ ⊙ )",
+		"hai! ( ˘͈ ᵕ ˘͈♡)",
+		"voreposting",
 	}
 	i := rand.Intn(len(phrases))
 	return phrases[i]
