@@ -6,26 +6,50 @@ html {
      the width doesnt change between pages */
   overflow-y: scroll;
   font-size: 120%;
+  line-height: 1.6;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  background-color: #eaddca;
+}
+
+ul a:hover li {
+  background-color: #eaddca;
 }
 
 h2 {
   text-align: center;
 }
 
-.float-right {
-	float: right;
+ul {
+  list-style-type: none;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
-nav {
-	font-weight: bold;
+ul li {
+  padding: 8px 0;
+  border-bottom: 1px dotted #888;
+  padding: 0.3rem;
+  font-size: 1.05rem;
 }
 
 nav a {
-  text-decoration: underline;
+  border-bottom: 1px dotted #000;
   color: #000;
 }
 
-nav a:hover {
-  background-color: #000;
-  color: #fff;
+.left-text {
+  display: inline-block;
+  overflow-wrap: break-word;
+  max-width: 80%;
+}
+
+.right-text {
+  float: right;
+  display: inline-block;
 }

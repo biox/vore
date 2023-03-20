@@ -2,15 +2,22 @@
 {{ template "head" . }}
 {{ template "nav" . }}
 
-<!-- <h3> {{ .Data.User }}'s feed</h3> -->
 {{ $length := len .Data.Items }} {{ if eq $length 0 }}
-<p> no feeds found 😭</p>
-<p> consider <a href="/feeds">adding some</a></p>
+{{ if .LoggedIn }}
+<p> -> <a href="/feeds">add your first feed</a></p>
+{{ end }}
 {{ end }}
 
+<ul>
 {{ range .Data.Items }}
-<p> <a href="{{ .Link }}">{{ .Title }}</a>
+<a href="{{ .Link }}">
+	<li>
+		<span class=left-text>{{ .Title }}</span>
+		<span class=right-text><small>{{ .Date.Format "2006-01-02" }}</small></span>
+	</li>
+</a>
 {{ end }}
+</ul>
 
 {{ template "tail" . }}
 {{ end }}

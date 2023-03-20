@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -57,25 +58,9 @@ func (s *Site) loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.Method == "GET" {
 		if s.loggedIn(r) {
-			fmt.Fprintf(w, "you are already logged in :3\n")
+			http.Redirect(w, r, "/", http.StatusSeeOther)
 		} else {
-			fmt.Fprintf(w, `<!DOCTYPE html>
-				<h3>login</h3>
-				<form method="POST" action="/login">
-				<label for="username">username:</label>
-				<input type="text" name="username" required><br>
-				<label for="password">password:</label>
-				<input type="password" name="password" required><br>
-				<input type="submit" value="login">
-				</form>`)
-			fmt.Fprintf(w, `<h3>register</h3>
-				<form method="POST" action="/register">
-				<label for="username">username:</label>
-				<input type="text" name="username" required><br>
-				<label for="password">password:</label>
-				<input type="password" name="password" required><br>
-				<input type="submit" value="register">
-				</form>`)
+			s.renderPage(w, r, "login", nil)
 		}
 	}
 	if r.Method == "POST" {
@@ -84,8 +69,7 @@ func (s *Site) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 		err := s.login(w, username, password)
 		if err != nil {
-			fmt.Fprintf(w, `<!DOCTYPE html>
-				<p>💀 unauthorized: %s`, err)
+			s.renderErr(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 		http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -152,9 +136,6 @@ func (s *Site) feedsHandler(w http.ResponseWriter, r *http.Request) {
 		feeds = s.reaper.GetUserFeeds(s.username(r))
 	}
 	s.renderPage(w, r, "feeds", feeds)
-
-	// TODO: textbox with feed.URL
-	// TODO: validate button
 }
 
 // TODO:
@@ -293,12 +274,14 @@ func (s *Site) renderPage(w http.ResponseWriter, r *http.Request, page string, d
 		Username   string
 		LoggedIn   bool
 		StyleSheet string
+		CutePhrase string
 		Data       any
 	}{
 		Title:      page + " | " + s.title,
 		Username:   s.username(r),
 		LoggedIn:   s.loggedIn(r),
 		StyleSheet: string(stylesheet),
+		CutePhrase: s.randomCutePhrase(),
 		Data:       data,
 	}
 
@@ -345,4 +328,16 @@ func (s *Site) methodAllowed(w http.ResponseWriter, r *http.Request, allowedMeth
 		s.renderErr(w, r.Method, http.StatusMethodNotAllowed)
 	}
 	return allowed
+}
+
+func (s *Site) randomCutePhrase() string {
+	phrases := []string{
+		"nom nom posts (๑ᵔ⤙ᵔ๑)",
+		"cthulhu says hi ^(;,;)^",
+		"( -_•)╦̵̵̿╤─ - - vore",
+		"devouring feeds since 2023",
+		"tfw new rss post (⊙ _ ⊙ )",
+	}
+	i := rand.Intn(len(phrases))
+	return phrases[i]
 }

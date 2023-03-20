@@ -1,0 +1,25 @@
+{{ define "login" }}
+{{ template "head" . }}
+{{ template "nav" . }}
+<h3>login</h3>
+<form method="POST" action="/login">
+	<label for="username">username:</label>
+	<input type="text" name="username" required>
+	<br>
+	<label for="password">password:</label>
+	<input type="password" name="password" required>
+	<br>
+	<input type="submit" value="login">
+</form>
+<h3>register</h3>
+<form method="POST" action="/register">
+	<label for="username">username:</label>
+	<input type="text" name="username" required>
+	<br>
+	<label for="password">password:</label>
+	<input type="password" name="password" required>
+	<br>
+	<input type="submit" value="register">
+</form>
+{{ template "tail" . }}
+{{ end }}

@@ -30,6 +30,6 @@ func main() {
 	mux.HandleFunc("/logout", s.logoutHandler)
 	mux.HandleFunc("/register", s.registerHandler)
 
-	fmt.Println("vore: listening on http://localhost:5544")
+	fmt.Println("main: listening on http://localhost:5544")
 	panic(http.ListenAndServe(":5544", mux))
 }

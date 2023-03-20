@@ -1,98 +1,23 @@
-todo
+           vore 
+      a feed reader
+      
+  features:
+    - minimal & reliable
+    - handles rss & atom feeds
+    - updates all feeds periodically
+    - shows you a date-ordered list of posts
+    - open source & free of charge forever
+    - (and not in the shitty open core kind of way)
+    - jes built it
 
- [ ] GET /discover
-   (similar to sourcehut's "featured projects")
- [ ] GET /
-   logged out:
-     describe what vore is & why it's cool, tell ppl to sign up
-     discover (list of top20 most popular feeds on vore)
-   logged in:
-     discover (list of top20 most popular feeds on vore)
- [x] GET /login
-   form (existing account): username & password
-   form (new account): username & password
-   built & maintained by jes
- [x] POST /login
-   success:
-     add session cookie
-     redirect to /{username}
-   fail:
-     log an existing user in, add session cookie, redirect to /{username}
-     login failure, redirect to /login
- [x] POST /logout
-   delete session cookie if exists
-   redirect to /
-   TODO: expire session_token from db eventually
- [x] POST /register
-   success:
-     add session cookie
-     redirect to /
-   fail:
-     update
-   add new user & hashed password to database
-   register failure: redirect to /login
-   TODO: validate user input
+  anti-features:
+    - no tags
+    - no options
+    - no javascript
+    - no unread indicators or push notifs
+    - no comments, upvotes, or ranks
 
- [ ] GET /feeds
-   > if no feeds, /discover for ideas
-   pretty-print your feeds
-   <text box with pre-populated list of your feed urls, one per line>
-   button: validate
-   POST /feeds/validate
-   logged out: unauthorized. click here to login.
-
- TODO: POST /feeds/validate
-    make sure each url is resolvable
-    check if feed exists in db already
-      if it does, do nothing
-      if it doesn't, attempt fetching it
-      TODO: validate that title exists
-    redir -> /feeds/validate
-    logged out: 401 unauthorized
-
- TODO: GET /feeds/validate
-    shows feed diff
-    "if this all looks correct, hit submit:"
-    button: submit
-    POST /feeds/submit
-    logged out: 401 unauthorized
-
- [ ] POST /feeds/submit
-   writes desired feeds to database
-   subscribes user to feeds
-   redir -> /feeds
-    logged out: 401 unauthorized
-
- [ ] GET /{username}
-   display a users feed items by date, maybe in a table?
-   -> there is a button to view the feed an article came from
-
- extra: tool for looking up feed from website
-
- background:
- fetch feeds every ~90m
-
- headers
-  unauth'd: login
-  auth'd: my feeds | login
-
- sql
-   user      (id, username, password, session_token, created_at)
-   feed      (id, url, fetch_error, created_at, created_by)
-   subscribe (id, user, feed, created_at, created_by)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  todo
+    - tool for looking up feeds
+    - more thorough validation
+    - handle unfetchable feeds

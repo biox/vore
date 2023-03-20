@@ -1,16 +1,14 @@
 {{ define "nav" }}
 <nav>
 	<h2><a href="/{{ .Username }}">vore</a></h2>
-	<hr>|
-	{{ if .LoggedIn }}
-	nom nom feeds (๑ᵔ⤙ᵔ๑)
-	{{ else }}
-		devouring feeds since 2023
-	{{ end }}
-	<span class=float-right>
+	<hr>
+	<span class=left-text>
+		| {{ .CutePhrase }}
+	</span>
+	<span class=right-text>
 		{{ if .LoggedIn }}
 		<a href="/feeds">my feeds</a></h3> |
-		{{ .Username }}(<a href="/logout">logout</a>)
+		<a href="/logout">logout</a>
 		{{ else }}
 		<a href="/login">login</a>
 		{{ end }}
