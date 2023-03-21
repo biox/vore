@@ -312,7 +312,7 @@ func (s *Site) printDomain(rawURL string) string {
 	}
 	// do our best to trim it manually if url parsing fails
 	trimmedStr := strings.TrimSpace(rawURL)
-	trimmedStr = strings.TrimPrefix(rawURL, "http://")
+	trimmedStr = strings.TrimPrefix(trimmedStr, "http://")
 	trimmedStr = strings.TrimPrefix(trimmedStr, "https://")
 
 	return strings.Split(trimmedStr, "/")[0]
