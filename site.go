@@ -262,8 +262,12 @@ func (s *Site) register(username string, password string) error {
 // template execution engine. it's normally the last thing a
 // handler should do tbh.
 func (s *Site) renderPage(w http.ResponseWriter, r *http.Request, page string, data any) {
+	funcMap := template.FuncMap{
+		"printDomain": s.printDomain,
+	}
+
 	tmplFiles := filepath.Join("files", "*.tmpl.html")
-	tmpl := template.Must(template.ParseGlob(tmplFiles))
+	tmpl := template.Must(template.New("whatever").Funcs(funcMap).ParseGlob(tmplFiles))
 
 	// we read the stylesheet in order to render it inline
 	cssFile := filepath.Join("files", "style.css")
@@ -296,6 +300,17 @@ func (s *Site) renderPage(w http.ResponseWriter, r *http.Request, page string, d
 		s.renderErr(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+// printDomain does a best-effort uri parse and
+// prints the base domain, otherwise returning the
+// unmodified string
+func (s *Site) printDomain(rawURL string) string {
+	parsedURL, err := url.Parse(rawURL)
+	if err != nil {
+		return ""
+	}
+	return parsedURL.Hostname()
 }
 
 // renderErr sets the correct http status in the header,
