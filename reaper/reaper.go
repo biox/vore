@@ -85,16 +85,8 @@ func (r *Reaper) updateAll() {
 // updateFeed triggers a fetch on the given feed,
 // and sets a fetch error in the db if there is one.
 func (r *Reaper) updateFeed(f *rss.Feed) {
-	var currentErr string
 	err := f.Update()
-	if err != nil {
-		currentErr = err.Error()
-	}
-
-	storedErr := r.db.GetFeedFetchError(f.UpdateURL)
-	if currentErr != storedErr {
-		r.db.SetFeedFetchError(f.UpdateURL, err)
-	}
+	r.db.SetFeedFetchError(f.UpdateURL, err)
 }
 
 // Have checks whether a given url is represented
