@@ -243,12 +243,18 @@ func (s *Site) login(w http.ResponseWriter, username string, password string) er
 }
 
 func (s *Site) register(username string, password string) error {
+	if s.db.UserExists(username) {
+		return fmt.Errorf("user '%s' already exists", username)
+	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 
-	s.db.AddUser(username, string(hashedPassword))
+	err = s.db.AddUser(username, string(hashedPassword))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

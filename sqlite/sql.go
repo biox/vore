@@ -87,11 +87,9 @@ func (s *DB) SetSessionToken(username string, token string) {
 	}
 }
 
-func (s *DB) AddUser(username string, passwordHash string) {
+func (s *DB) AddUser(username string, passwordHash string) error {
 	_, err := s.sql.Exec("INSERT INTO user (username, password) VALUES (?, ?)", username, passwordHash)
-	if err != nil {
-		panic(err)
-	}
+	return err
 }
 
 func (s *DB) Subscribe(username string, feedURL string) {
