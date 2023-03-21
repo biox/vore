@@ -219,3 +219,12 @@ func (s *DB) SetFeedFetchError(url string, fetchErr error) {
 		panic(err)
 	}
 }
+
+func (s *DB) GetFeedFetchError(url string) string {
+	var fetchErr string
+	err := s.sql.QueryRow(`SELECT fetch_error FROM feed WHERE url=?`, url).Scan(&fetchErr)
+	if err != nil {
+		panic(err)
+	}
+	return fetchErr
+}
