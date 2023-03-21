@@ -209,13 +209,28 @@ func (s *DB) WriteFeed(url string) {
 
 // WriteFeed writes an rss feed to the database for permanent storage
 // if the given feed already exists, WriteFeed does nothing.
-func (s *DB) SetFeedFetchError(url string, fetchErr error) {
-	var errStr string
-	if fetchErr != nil {
-		errStr = fetchErr.Error()
-	}
-	_, err := s.sql.Exec(`UPDATE feed SET fetch_error=? WHERE url=?`, errStr, url)
+func (s *DB) SetFeedFetchError(url string, fetchErr string) error {
+	storedErr, err := s.GetFeedFetchError(url)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	if fetchErr == storedErr {
+		return nil
+	}
+	_, err = s.sql.Exec("UPDATE feed SET fetch_error=? WHERE url=?", fetchErr, url)
+	return err
+}
+
+// WriteFeed writes an rss feed to the database for permanent storage
+// if the given feed already exists, WriteFeed does nothing.
+func (s *DB) GetFeedFetchError(url string) (string, error) {
+	var result sql.NullString
+	err := s.sql.QueryRow("SELECT fetch_error FROM feed WHERE url=?", url).Scan(&result)
+	if err != nil {
+		return "", err
+	}
+	if result.Valid {
+		return result.String, nil
+	}
+	return "", nil
 }
