@@ -307,10 +307,14 @@ func (s *Site) renderPage(w http.ResponseWriter, r *http.Request, page string, d
 // unmodified string
 func (s *Site) printDomain(rawURL string) string {
 	parsedURL, err := url.Parse(rawURL)
-	if err != nil {
-		return ""
+	if err == nil {
+		return parsedURL.Hostname()
 	}
-	return parsedURL.Hostname()
+	// do our best to trim it manually if url parsing fails
+	trimmedStr := strings.TrimPrefix(rawURL, "http://")
+	trimmedStr = strings.TrimPrefix(trimmedStr, "https://")
+
+	return strings.Split(trimmedStr, "/")[0]
 }
 
 // renderErr sets the correct http status in the header,
