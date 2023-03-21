@@ -7,7 +7,6 @@
 <p> -> <a href="/feeds">add your first feed</a></p>
 {{ end }}
 {{ end }}
-
 <ul>
 {{ range .Data.Items }}
 <a href="{{ .Link }}">
@@ -15,10 +14,6 @@
 		{{ .Title }}
 		<span class=puny>
 			{{ .Link | printDomain }}
-		</span>
-		<br>
-		<span class=puny>
-			{{ .Date.Format "2006-01-02" }}
 		</span>
 	</li>
 </a>
