@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"time"
 
 	"git.j3s.sh/vore/lib"
 	"git.j3s.sh/vore/reaper"
@@ -236,8 +237,10 @@ func (s *Site) login(w http.ResponseWriter, username string, password string) er
 	sessionToken := lib.GenerateSessionToken()
 	s.db.SetSessionToken(username, sessionToken)
 	http.SetCookie(w, &http.Cookie{
-		Name:  "session_token",
-		Value: sessionToken,
+		Name: "session_token",
+		// 18 years
+		Expires: time.Now().Add(time.Hour * 24 * 365 * 18),
+		Value:   sessionToken,
 	})
 	return nil
 }
