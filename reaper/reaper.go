@@ -86,14 +86,9 @@ func (r *Reaper) updateAll() {
 // and sets a fetch error in the db if there is one.
 func (r *Reaper) updateFeed(f *rss.Feed) {
 	err := f.Update()
-	var errStr string
 	if err != nil {
-		// some amount of failures are expected
-		errStr = err.Error()
-	}
-	err = r.db.SetFeedFetchError(f.UpdateURL, errStr)
-	if err != nil {
-		fmt.Printf("[err] reaper: set fetch_error %s\n", err)
+		fmt.Printf("[err] reaper: fetch failure url '%s' %s\n", f.UpdateURL, err)
+		err = r.db.SetFeedFetchError(f.UpdateURL, err.Error())
 	}
 }
 
