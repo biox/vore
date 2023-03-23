@@ -48,7 +48,7 @@ func (r *Reaper) Start() {
 
 	for {
 		r.updateAll()
-		time.Sleep(2 * time.Hour)
+		time.Sleep(15 * time.Minute)
 	}
 }
 
@@ -85,6 +85,10 @@ func (r *Reaper) updateAll() {
 // updateFeed triggers a fetch on the given feed,
 // and sets a fetch error in the db if there is one.
 func (r *Reaper) updateFeed(f *rss.Feed) {
+	// return early if it's not time to refresh yet
+	if !f.Refresh.After(time.Now()) {
+		return
+	}
 	err := f.Update()
 	if err != nil {
 		fmt.Printf("[err] reaper: fetch failure url '%s' %s\n", f.UpdateURL, err)
