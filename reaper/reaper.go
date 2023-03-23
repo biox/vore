@@ -33,8 +33,6 @@ func Summon(db *sqlite.DB) *Reaper {
 }
 
 func (r *Reaper) Start() {
-	fmt.Println("reaper: starting")
-
 	// Make initial url list
 	urls := r.db.GetAllFeedURLs()
 
@@ -47,7 +45,7 @@ func (r *Reaper) Start() {
 	}
 
 	for {
-		r.updateAll()
+		r.refreshAll()
 		time.Sleep(15 * time.Minute)
 	}
 }
@@ -64,34 +62,35 @@ func (r *Reaper) addFeed(f rss.Feed) {
 
 // UpdateAll fetches every feed & attempts updating them
 // asynchronously, then prints the duration of the sync
-func (r *Reaper) updateAll() {
+func (r *Reaper) refreshAll() {
 	start := time.Now()
-	fmt.Printf("reaper: fetching %d feeds\n", len(r.feeds))
-
 	var wg sync.WaitGroup
-	wg.Add(len(r.feeds))
 	for i := range r.feeds {
-		go func(i int) {
-			defer wg.Done()
-			r.updateFeed(&r.feeds[i])
-		}(i)
+		if r.staleFeed(&r.feeds[i]) {
+			wg.Add(1)
+			go func(f *rss.Feed) {
+				defer wg.Done()
+				r.refreshFeed(f)
+			}(&r.feeds[i])
+		}
 	}
-	go func() {
-		wg.Wait()
-		fmt.Printf("reaper: fetched %d feeds in %s\n", len(r.feeds), time.Since(start))
-	}()
+	wg.Wait()
+	fmt.Printf("reaper: refresh complete in %s\n", time.Since(start))
+}
+
+func (r *Reaper) staleFeed(f *rss.Feed) bool {
+	if f.Refresh.After(time.Now()) {
+		return false
+	}
+	return true
 }
 
 // updateFeed triggers a fetch on the given feed,
 // and sets a fetch error in the db if there is one.
-func (r *Reaper) updateFeed(f *rss.Feed) {
-	// return early if it's not time to refresh yet
-	if !f.Refresh.After(time.Now()) {
-		return
-	}
+func (r *Reaper) refreshFeed(f *rss.Feed) {
 	err := f.Update()
 	if err != nil {
-		fmt.Printf("[err] reaper: fetch failure url '%s' %s\n", f.UpdateURL, err)
+		fmt.Printf("[err] reaper: fetch failure '%s': %s\n", f.UpdateURL, err)
 		r.db.SetFeedFetchError(f.UpdateURL, err.Error())
 	}
 }
