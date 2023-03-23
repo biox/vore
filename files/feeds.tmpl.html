@@ -60,12 +60,10 @@ https://sequentialread.com/rss
 {{ end }}
 {{ range .Data }}
 <pre>
-{{ if .Title }}{{ .Title }}{{ else }}{{ .UpdateURL }}{{ end }} {
-    title = {{ .Title }}
-     desc = {{ .Description }}
-      url = {{ .UpdateURL }}
-    items = {{ len .Items }}
-}
+{{ .UpdateURL }}
+  title: {{ .Title | trimSpace }}
+   desc: {{ .Description | trimSpace }}
+  items: {{ len .Items }}
 </pre>
 {{ end }}
 {{ else }}

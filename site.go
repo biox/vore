@@ -266,6 +266,7 @@ func (s *Site) register(username string, password string) error {
 func (s *Site) renderPage(w http.ResponseWriter, r *http.Request, page string, data any) {
 	funcMap := template.FuncMap{
 		"printDomain": s.printDomain,
+		"trimSpace":   strings.TrimSpace,
 	}
 
 	tmplFiles := filepath.Join("files", "*.tmpl.html")
@@ -366,8 +367,9 @@ func (s *Site) randomCutePhrase() string {
 		"( -_•)╦̵̵̿╤─ - - -- - vore",
 		"devouring feeds since 2023",
 		"tfw new rss post (⊙ _ ⊙ )",
-		"hai! ( ˘͈ ᵕ ˘͈♡)",
+		"( ˘͈ ᵕ ˘͈♡) <3",
 		"voreposting",
+		"vore dot website",
 	}
 	i := rand.Intn(len(phrases))
 	return phrases[i]
