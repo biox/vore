@@ -2,7 +2,10 @@ package reaper
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -88,7 +91,7 @@ func (r *Reaper) staleFeed(f *rss.Feed) bool {
 // updateFeed triggers a fetch on the given feed,
 // and sets a fetch error in the db if there is one.
 func (r *Reaper) refreshFeed(f *rss.Feed) {
-	err := f.Update()
+	err := f.UpdateByFunc(reaperFetchFunc)
 	if err != nil {
 		fmt.Printf("[err] reaper: fetch failure '%s': %s\n", f.UpdateURL, err)
 		r.db.SetFeedFetchError(f.UpdateURL, err.Error())
@@ -142,10 +145,43 @@ func (r *Reaper) SortFeedItemsByDate(f []rss.Feed) []rss.Item {
 	return posts
 }
 
+var reaperFetchFunc = func(url string) (*http.Response, error) {
+	client := http.DefaultClient
+	resp, err := client.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// escape un-parseable HTML elements
+	body := string(bodyBytes)
+	body = strings.ReplaceAll(body, "&ndash;", "")
+	//	body = strings.ReplaceAll(body, "&&amp;", "&#8211;")
+
+	//	body = strings.ReplaceAll(body, "&reg;", "")
+	//	fmt.Println(b.String())
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	// body := html.UnescapeString(string(bodyBytes))
+
+	// re-encode as XML
+	// err = xml.EscapeText(&b, []byte(body))
+
+	// overwrite the body
+	resp.Body.Close()
+	resp.Body = io.NopCloser(strings.NewReader(body))
+
+	return resp, nil
+}
+
 // FetchFeed attempts to fetch a feed from a given url, marshal
 // it into a feed object, and add it to Reaper.
 func (r *Reaper) Fetch(url string) error {
-	feed, err := rss.Fetch(url)
+	feed, err := rss.FetchByFunc(reaperFetchFunc, url)
 	if err != nil {
 		return err
 	}
