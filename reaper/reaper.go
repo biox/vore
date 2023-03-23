@@ -124,7 +124,7 @@ func (r *Reaper) GetUserFeeds(username string) []rss.Feed {
 
 func (r *Reaper) SortFeeds(f []rss.Feed) {
 	sort.Slice(f, func(i, j int) bool {
-		return f[i].Title < f[j].Title
+		return f[i].UpdateURL < f[j].UpdateURL
 	})
 }
 
