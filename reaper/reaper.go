@@ -92,7 +92,7 @@ func (r *Reaper) updateFeed(f *rss.Feed) {
 	err := f.Update()
 	if err != nil {
 		fmt.Printf("[err] reaper: fetch failure url '%s' %s\n", f.UpdateURL, err)
-		err = r.db.SetFeedFetchError(f.UpdateURL, err.Error())
+		r.db.SetFeedFetchError(f.UpdateURL, err.Error())
 	}
 }
 
