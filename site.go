@@ -157,7 +157,6 @@ func (s *Site) feedsSubmitHandler(w http.ResponseWriter, r *http.Request) {
 	var validatedURLs []string
 	for _, inputURL := range strings.Split(r.FormValue("submit"), "\r\n") {
 		inputURL = strings.TrimSpace(inputURL)
-		inputURL = strings.ToLower(inputURL)
 		if inputURL == "" {
 			continue
 		}
