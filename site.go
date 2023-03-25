@@ -13,8 +13,8 @@ import (
 
 	"git.j3s.sh/vore/lib"
 	"git.j3s.sh/vore/reaper"
+	"git.j3s.sh/vore/rss"
 	"git.j3s.sh/vore/sqlite"
-	"github.com/SlyMarbo/rss"
 	"golang.org/x/crypto/bcrypt"
 )
 

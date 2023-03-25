@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"git.j3s.sh/vore/rss"
 	"git.j3s.sh/vore/sqlite"
-	"github.com/SlyMarbo/rss"
 )
 
 type Reaper struct {

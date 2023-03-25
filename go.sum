@@ -1,5 +1,3 @@
-github.com/SlyMarbo/rss v1.0.5 h1:DPcZ4aOXXHJ5yNLXY1q/57frIixMmAvTtLxDE3fsMEI=
-github.com/SlyMarbo/rss v1.0.5/go.mod h1:w6Bhn1BZs91q4OlEnJVZEUNRJmlbFmV7BkAlgCN8ofM=
 github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394 h1:OYA+5W64v3OgClL+IrOD63t4i/RW7RqrAVl9LTZ9UqQ=
 github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394/go.mod h1:Q8n74mJTIgjX4RBBcHnJ05h//6/k6foqmgE45jTQtxg=
 github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=
