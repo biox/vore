@@ -85,13 +85,16 @@ func (r *Reaper) staleFeed(f *rss.Feed) bool {
 	return true
 }
 
-// updateFeed triggers a fetch on the given feed,
+// refreshFeed triggers a fetch on the given feed,
 // and sets a fetch error in the db if there is one.
 func (r *Reaper) refreshFeed(f *rss.Feed) {
 	err := f.Update()
 	if err != nil {
 		fmt.Printf("[err] reaper: fetch failure '%s': %s\n", f.UpdateURL, err)
-		r.db.SetFeedFetchError(f.UpdateURL, err.Error())
+		err = r.db.SetFeedFetchError(f.UpdateURL, err.Error())
+		if err != nil {
+			fmt.Printf("[err] reaper: could not set feed fetch error '%s'\n", err)
+		}
 	}
 }
 

@@ -209,11 +209,12 @@ func (s *DB) WriteFeed(url string) {
 
 // WriteFeed writes an rss feed to the database for permanent storage
 // if the given feed already exists, WriteFeed does nothing.
-func (s *DB) SetFeedFetchError(url string, fetchErr string) {
+func (s *DB) SetFeedFetchError(url string, fetchErr string) error {
 	_, err := s.sql.Exec("UPDATE feed SET fetch_error=? WHERE url=?", fetchErr, url)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 // WriteFeed writes an rss feed to the database for permanent storage
