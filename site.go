@@ -35,10 +35,9 @@ func New() *Site {
 	db := sqlite.New(title + ".db")
 	s := Site{
 		title:  title,
-		reaper: reaper.Summon(db),
+		reaper: reaper.New(db),
 		db:     db,
 	}
-	go s.reaper.Start()
 	return &s
 }
 
@@ -117,7 +116,7 @@ func (s *Site) userHandler(w http.ResponseWriter, r *http.Request) {
 	items := s.reaper.SortFeedItemsByDate(s.reaper.GetUserFeeds(username))
 	data := struct {
 		User  string
-		Items []rss.Item
+		Items []*rss.Item
 	}{
 		User:  username,
 		Items: items,
@@ -132,7 +131,7 @@ func (s *Site) feedsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var feeds []rss.Feed
+	var feeds []*rss.Feed
 	if s.loggedIn(r) {
 		feeds = s.reaper.GetUserFeeds(s.username(r))
 	}

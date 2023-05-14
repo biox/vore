@@ -12,36 +12,36 @@ import (
 
 type Reaper struct {
 	// internal list of all rss feeds where the map
-	// key represents the primary id of the key in the db
-	feeds []rss.Feed
-
-	// this mutex is used for locking writes to Feeds
-	mu sync.Mutex
+	// key represents the url of the feed (which should be unique)
+	feeds map[string]*rss.Feed
 
 	db *sqlite.DB
 }
 
-func Summon(db *sqlite.DB) *Reaper {
-	reaper := Reaper{
-		feeds: []rss.Feed{},
-		mu:    sync.Mutex{},
+func New(db *sqlite.DB) *Reaper {
+	r := &Reaper{
+		feeds: make(map[string]*rss.Feed),
 		db:    db,
 	}
-	return &reaper
+
+	go r.start()
+
+	return r
 }
 
-// Start initializes the reaper by populating the feeds list from the database
-// and periodically refreshes all feeds every 15 minutes, as needed.
-func (r *Reaper) Start() {
-	// Make initial url list
+// Start initializes the reaper by populating a list of feeds from the database
+// and periodically refreshes all feeds every 15 minutes, if the feeds are
+// stale.
+// reaper should only ever be started once (in New)
+func (r *Reaper) start() {
 	urls := r.db.GetAllFeedURLs()
 
 	for _, url := range urls {
 		// Setting UpdateURL lets us defer fetching
-		feed := rss.Feed{
+		feed := &rss.Feed{
 			UpdateURL: url,
 		}
-		r.feeds = append(r.feeds, feed)
+		r.feeds[url] = feed
 	}
 
 	for {
@@ -51,13 +51,8 @@ func (r *Reaper) Start() {
 }
 
 // Add the given rss feed to Reaper for maintenance.
-// If the given feed is already in reaper.Feeds, Add does nothing.
-func (r *Reaper) addFeed(f rss.Feed) {
-	if !r.HasFeed(f.UpdateURL) {
-		r.mu.Lock()
-		r.feeds = append(r.feeds, f)
-		r.mu.Unlock()
-	}
+func (r *Reaper) addFeed(f *rss.Feed) {
+	r.feeds[f.UpdateURL] = f
 }
 
 // UpdateAll fetches every feed & attempts updating them
@@ -71,7 +66,7 @@ func (r *Reaper) refreshAllFeeds() {
 			go func(f *rss.Feed) {
 				defer wg.Done()
 				r.refreshFeed(f)
-			}(&r.feeds[i])
+			}(r.feeds[i])
 		}
 	}
 	wg.Wait()
@@ -107,32 +102,29 @@ func (r *Reaper) HasFeed(url string) bool {
 }
 
 // GetUserFeeds returns a list of feeds
-func (r *Reaper) GetUserFeeds(username string) []rss.Feed {
+func (r *Reaper) GetUserFeeds(username string) []*rss.Feed {
 	urls := r.db.GetUserFeedURLs(username)
-	var result []rss.Feed
-	for i := range r.feeds {
-		for _, url := range urls {
-			if r.feeds[i].UpdateURL == url {
-				result = append(result, r.feeds[i])
-			}
-		}
+	var result []*rss.Feed
+	for _, u := range urls {
+		// feeds in the db are guaranteed to be in reaper
+		result = append(result, r.feeds[u])
 	}
 
 	r.SortFeeds(result)
 	return result
 }
 
-func (r *Reaper) SortFeeds(f []rss.Feed) {
+func (r *Reaper) SortFeeds(f []*rss.Feed) {
 	sort.Slice(f, func(i, j int) bool {
 		return f[i].UpdateURL < f[j].UpdateURL
 	})
 }
 
-func (r *Reaper) SortFeedItemsByDate(feeds []rss.Feed) []rss.Item {
-	var posts []rss.Item
+func (r *Reaper) SortFeedItemsByDate(feeds []*rss.Feed) []*rss.Item {
+	var posts []*rss.Item
 	for _, f := range feeds {
 		for _, i := range f.Items {
-			posts = append(posts, *i)
+			posts = append(posts, i)
 		}
 	}
 
@@ -142,15 +134,15 @@ func (r *Reaper) SortFeedItemsByDate(feeds []rss.Feed) []rss.Item {
 	return posts
 }
 
-// FetchFeed attempts to fetch a feed from a given url, marshal
-// it into a feed object, and add it to Reaper.
+// Fetch attempts to fetch a feed from a given url, marshal
+// it into a feed object, and manage it via reaper.
 func (r *Reaper) Fetch(url string) error {
 	feed, err := rss.Fetch(url)
 	if err != nil {
 		return err
 	}
 
-	r.addFeed(*feed)
+	r.addFeed(feed)
 
 	return nil
 }
