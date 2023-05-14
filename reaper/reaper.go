@@ -1,7 +1,7 @@
 package reaper
 
 import (
-	"fmt"
+	"log"
 	"sort"
 	"sync"
 	"time"
@@ -70,7 +70,7 @@ func (r *Reaper) refreshAllFeeds() {
 		}
 	}
 	wg.Wait()
-	fmt.Printf("reaper: refresh complete in %s\n", time.Since(start))
+	log.Printf("reaper: refresh complete in %s\n", time.Since(start))
 }
 
 // refreshFeed triggers a fetch on the given feed,
@@ -83,10 +83,10 @@ func (r *Reaper) refreshFeed(f *rss.Feed) {
 }
 
 func (r *Reaper) handleFeedFetchFailure(url string, err error) {
-	fmt.Printf("[err] reaper: fetch failure '%s': %s\n", url, err)
+	log.Printf("[err] reaper: fetch failure '%s': %s\n", url, err)
 	err = r.db.SetFeedFetchError(url, err.Error())
 	if err != nil {
-		fmt.Printf("[err] reaper: could not set feed fetch error '%s'\n", err)
+		log.Printf("[err] reaper: could not set feed fetch error '%s'\n", err)
 	}
 }
 

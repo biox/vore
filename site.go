@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -354,7 +355,7 @@ func (s *Site) renderErr(w http.ResponseWriter, error string, code int) {
 		prefix += "we made a fucky wucky (╥﹏╥)\n\n"
 		prefix += "500 internal server error\n"
 	}
-	fmt.Println(prefix + error)
+	log.Println(prefix + error)
 	http.Error(w, prefix+error, code)
 }
 
