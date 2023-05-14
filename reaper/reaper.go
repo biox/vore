@@ -22,16 +22,16 @@ type Reaper struct {
 }
 
 func Summon(db *sqlite.DB) *Reaper {
-	var feeds []rss.Feed
-
 	reaper := Reaper{
-		feeds: feeds,
+		feeds: []rss.Feed{},
 		mu:    sync.Mutex{},
 		db:    db,
 	}
 	return &reaper
 }
 
+// Start initializes the reaper by populating the feeds list from the database
+// and periodically refreshes all feeds every 15 minutes, as needed.
 func (r *Reaper) Start() {
 	// Make initial url list
 	urls := r.db.GetAllFeedURLs()
@@ -45,7 +45,7 @@ func (r *Reaper) Start() {
 	}
 
 	for {
-		r.refreshAll()
+		r.refreshAllFeeds()
 		time.Sleep(15 * time.Minute)
 	}
 }
@@ -62,11 +62,11 @@ func (r *Reaper) addFeed(f rss.Feed) {
 
 // UpdateAll fetches every feed & attempts updating them
 // asynchronously, then prints the duration of the sync
-func (r *Reaper) refreshAll() {
+func (r *Reaper) refreshAllFeeds() {
 	start := time.Now()
 	var wg sync.WaitGroup
 	for i := range r.feeds {
-		if r.staleFeed(&r.feeds[i]) {
+		if r.feeds[i].Stale() {
 			wg.Add(1)
 			go func(f *rss.Feed) {
 				defer wg.Done()
@@ -78,31 +78,28 @@ func (r *Reaper) refreshAll() {
 	fmt.Printf("reaper: refresh complete in %s\n", time.Since(start))
 }
 
-func (r *Reaper) staleFeed(f *rss.Feed) bool {
-	if f.Refresh.After(time.Now()) {
-		return false
-	}
-	return true
-}
-
 // refreshFeed triggers a fetch on the given feed,
 // and sets a fetch error in the db if there is one.
 func (r *Reaper) refreshFeed(f *rss.Feed) {
 	err := f.Update()
 	if err != nil {
-		fmt.Printf("[err] reaper: fetch failure '%s': %s\n", f.UpdateURL, err)
-		err = r.db.SetFeedFetchError(f.UpdateURL, err.Error())
-		if err != nil {
-			fmt.Printf("[err] reaper: could not set feed fetch error '%s'\n", err)
-		}
+		r.handleFeedFetchFailure(f.UpdateURL, err)
+	}
+}
+
+func (r *Reaper) handleFeedFetchFailure(url string, err error) {
+	fmt.Printf("[err] reaper: fetch failure '%s': %s\n", url, err)
+	err = r.db.SetFeedFetchError(url, err.Error())
+	if err != nil {
+		fmt.Printf("[err] reaper: could not set feed fetch error '%s'\n", err)
 	}
 }
 
 // Have checks whether a given url is represented
 // in the reaper cache.
 func (r *Reaper) HasFeed(url string) bool {
-	for i := range r.feeds {
-		if r.feeds[i].UpdateURL == url {
+	for _, f := range r.feeds {
+		if f.UpdateURL == url {
 			return true
 		}
 	}
@@ -131,9 +128,9 @@ func (r *Reaper) SortFeeds(f []rss.Feed) {
 	})
 }
 
-func (r *Reaper) SortFeedItemsByDate(f []rss.Feed) []rss.Item {
+func (r *Reaper) SortFeedItemsByDate(feeds []rss.Feed) []rss.Item {
 	var posts []rss.Item
-	for _, f := range f {
+	for _, f := range feeds {
 		for _, i := range f.Items {
 			posts = append(posts, *i)
 		}

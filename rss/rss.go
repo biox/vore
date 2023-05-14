@@ -182,6 +182,10 @@ func (f *Feed) UpdateByFunc(fetchFunc FetchFunc) error {
 	return nil
 }
 
+func (f *Feed) Stale() bool {
+	return f.Refresh.Before(time.Now())
+}
+
 func (f *Feed) String() string {
 	buf := new(bytes.Buffer)
 	if debug {
