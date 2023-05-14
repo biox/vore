@@ -28,7 +28,7 @@ func New(path string) *DB {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	// feed
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS feed (
@@ -38,7 +38,7 @@ func New(path string) *DB {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	// subscribe
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS subscribe (
@@ -48,13 +48,11 @@ func New(path string) *DB {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	return &DB{sql: db}
 }
-
-// TODO: think more about errors
 
 func (db *DB) GetUsernameBySessionToken(token string) string {
 	var username string
@@ -63,7 +61,7 @@ func (db *DB) GetUsernameBySessionToken(token string) string {
 		return ""
 	}
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	return username
 }
@@ -75,16 +73,14 @@ func (db *DB) GetPassword(username string) string {
 		return ""
 	}
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	return password
 }
 
-func (db *DB) SetSessionToken(username string, token string) {
+func (db *DB) SetSessionToken(username string, token string) error {
 	_, err := db.sql.Exec("UPDATE user SET session_token=? WHERE username=?", token, username)
-	if err != nil {
-		panic(err)
-	}
+	return err
 }
 
 func (db *DB) AddUser(username string, passwordHash string) error {
@@ -100,19 +96,19 @@ func (db *DB) Subscribe(username string, feedURL string) {
 	if err == sql.ErrNoRows {
 		_, err := db.sql.Exec("INSERT INTO subscribe (user_id, feed_id) VALUES (?, ?)", uid, fid)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		return
 	}
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }
 
 func (db *DB) UnsubscribeAll(username string) {
 	_, err := db.sql.Exec("DELETE FROM subscribe WHERE user_id=?", db.GetUserID(username))
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }
 
@@ -123,7 +119,7 @@ func (db *DB) UserExists(username string) bool {
 		return false
 	}
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	return true
 }
@@ -132,7 +128,7 @@ func (db *DB) GetAllFeedURLs() []string {
 	// TODO: BAD SELECT STATEMENT!! SORRY :( --wesley
 	rows, err := db.sql.Query("SELECT url FROM feed")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer rows.Close()
 
@@ -141,7 +137,7 @@ func (db *DB) GetAllFeedURLs() []string {
 		var url string
 		err = rows.Scan(&url)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		urls = append(urls, url)
 	}
@@ -163,7 +159,7 @@ func (db *DB) GetUserFeedURLs(username string) []string {
 		return []string{}
 	}
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer rows.Close()
 
@@ -172,7 +168,7 @@ func (db *DB) GetUserFeedURLs(username string) []string {
 		var url string
 		err = rows.Scan(&url)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		urls = append(urls, url)
 	}
@@ -183,7 +179,7 @@ func (db *DB) GetUserID(username string) int {
 	var uid int
 	err := db.sql.QueryRow("SELECT id FROM user WHERE username=?", username).Scan(&uid)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	return uid
 }
@@ -192,7 +188,7 @@ func (db *DB) GetFeedID(feedURL string) int {
 	var fid int
 	err := db.sql.QueryRow("SELECT id FROM feed WHERE url=?", feedURL).Scan(&fid)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	return fid
 }
@@ -203,7 +199,7 @@ func (db *DB) WriteFeed(url string) {
 	_, err := db.sql.Exec(`INSERT INTO feed(url) VALUES(?)
 				ON CONFLICT(url) DO NOTHING`, url)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }
 

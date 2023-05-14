@@ -218,11 +218,14 @@ func (s *Site) feedsSubmitHandler(w http.ResponseWriter, r *http.Request) {
 // on the sessionToken that user has set. username
 // will return "" if there is no sessionToken.
 func (s *Site) username(r *http.Request) string {
-	sessionToken, err := r.Cookie("session_token")
-	if err != nil {
+	cookie, err := r.Cookie("session_token")
+	if err == http.ErrNoCookie {
 		return ""
 	}
-	username := s.db.GetUsernameBySessionToken(sessionToken.Value)
+	if err != nil {
+		log.Println(err)
+	}
+	username := s.db.GetUsernameBySessionToken(cookie.Value)
 	return username
 }
 
@@ -237,13 +240,13 @@ func (s *Site) loggedIn(r *http.Request) bool {
 // sets a session token against the supplied writer.
 func (s *Site) login(w http.ResponseWriter, username string, password string) error {
 	if username == "" {
-		return fmt.Errorf("username cannot be nil")
+		return fmt.Errorf("username cannot be empty")
 	}
 	if password == "" {
-		return fmt.Errorf("password cannot be nil")
+		return fmt.Errorf("password cannot be empty")
 	}
 	if !s.db.UserExists(username) {
-		return fmt.Errorf("user does not exist")
+		return fmt.Errorf("user '%s' does not exist", username)
 	}
 	storedPassword := s.db.GetPassword(username)
 	err := bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(password))
@@ -251,7 +254,11 @@ func (s *Site) login(w http.ResponseWriter, username string, password string) er
 		return fmt.Errorf("invalid password")
 	}
 	sessionToken := lib.GenerateSessionToken()
-	s.db.SetSessionToken(username, sessionToken)
+	err = s.db.SetSessionToken(username, sessionToken)
+	if err != nil {
+		log.Println(err)
+	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name: "session_token",
 		// 18 years
