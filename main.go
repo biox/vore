@@ -8,7 +8,8 @@ import (
 func main() {
 	s := New()
 	mux := http.NewServeMux()
-	// handles /, /<username>, and 404
+
+	// rootHandler handles /, /<username>, and 404
 	mux.HandleFunc("/", s.rootHandler)
 	mux.HandleFunc("/feeds", s.feedsHandler)
 	mux.HandleFunc("/feeds/submit", s.feedsSubmitHandler)

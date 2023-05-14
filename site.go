@@ -381,7 +381,7 @@ func (s *Site) randomCutePhrase() string {
 	phrases := []string{
 		"nom nom posts (๑ᵔ⤙ᵔ๑)",
 		"^(;,;)^ vawr",
-		"( -_•)╦̵̵̿╤─ - - -- - vore",
+		"( -_•)╦̵̵̿╤─ - - - vore",
 		"devouring feeds since 2023",
 		"tfw new rss post (⊙ _ ⊙ )",
 		"( ˘͈ ᵕ ˘͈♡) <3",
