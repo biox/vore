@@ -299,6 +299,7 @@ func (s *Site) register(username string, password string) error {
 func (s *Site) renderPage(w http.ResponseWriter, r *http.Request, page string, data any) {
 	funcMap := template.FuncMap{
 		"printDomain": s.printDomain,
+		"timeSince":   s.timeSince,
 		"trimSpace":   strings.TrimSpace,
 	}
 
@@ -352,6 +353,36 @@ func (s *Site) printDomain(rawURL string) string {
 	trimmedStr = strings.TrimPrefix(trimmedStr, "https://")
 
 	return strings.Split(trimmedStr, "/")[0]
+}
+
+func (s *Site) timeSince(t time.Time) string {
+	now := time.Now()
+	duration := now.Sub(t)
+
+	minutes := int(duration.Minutes())
+	hours := int(duration.Hours())
+	days := int(duration.Hours() / 24)
+	weeks := int(duration.Hours() / (24 * 7))
+	months := int(duration.Hours() / (24 * 7 * 4))
+	years := int(duration.Hours() / (24 * 7 * 4 * 12))
+
+	if years > 100 {
+		return fmt.Sprintf("far too long")
+	} else if years > 1 {
+		return fmt.Sprintf("%d years", years)
+	} else if months > 1 {
+		return fmt.Sprintf("%d months", months)
+	} else if weeks > 1 {
+		return fmt.Sprintf("%d weeks", weeks)
+	} else if days > 1 {
+		return fmt.Sprintf("%d days", days)
+	} else if hours > 1 {
+		return fmt.Sprintf("%d hours", hours)
+	} else if minutes > 1 {
+		return fmt.Sprintf("%d mins", minutes)
+	} else {
+		return fmt.Sprintf("just now")
+	}
 }
 
 // renderErr sets the correct http status in the header,

@@ -2,8 +2,8 @@
 {{ template "head" . }}
 {{ template "nav" . }}
 <h3>Settings</h3>
-<p><a href="/{{ .Username }}">vore.website/{{ .Username }}</a>
-<a href="/changelog">vore changelog</a>
+<p>your timeline: <a href="/{{ .Username }}">vore.website/{{ .Username }}</a>
+vore changelog: <a href="/changelog">changelog</a>
 
 {{ len .Data }} subscriptions:
 </p>

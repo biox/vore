@@ -13,14 +13,14 @@ you don't seem to have any feeds yet.
 {{ end }}
 <ul>
 {{ range .Data.Items }}
-<a href="{{ .Link }}">
 	<li>
+	<a href="{{ .Link }}">
 		{{ .Title }}
-		<span class=puny>
-			{{ .Link | printDomain }}
-		</span>
+	</a>
+	<span class=puny>(<a href="//{{ .Link | printDomain }}">{{ .Link | printDomain }}</a>)</span>
+	<br>
+	<span class=puny title="{{ .Date }}">published {{ .Date | timeSince }} ago</span>
 	</li>
-</a>
 {{ end }}
 </ul>
 

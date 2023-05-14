@@ -4,7 +4,7 @@ html {
   margin: 20px auto;
   /* make sure the scrollbar is always shown so
      the width doesnt change between pages */
-  font-size: calc(14px + 0.5vw);
+  font-size: calc(12px + 0.5vw);
   overflow-y: scroll;
 }
 
