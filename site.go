@@ -41,6 +41,19 @@ func New() *Site {
 	return &s
 }
 
+func (s *Site) rootHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/" {
+		s.indexHandler(w, r)
+		return
+	}
+	// handles /<username>
+	if s.db.UserExists(strings.TrimPrefix(r.URL.Path, "/")) {
+		s.userHandler(w, r)
+		return
+	}
+	http.NotFound(w, r)
+}
+
 func (s *Site) indexHandler(w http.ResponseWriter, r *http.Request) {
 	if !s.methodAllowed(w, r, "GET") {
 		return
