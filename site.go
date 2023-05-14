@@ -41,6 +41,10 @@ func New() *Site {
 	return &s
 }
 
+// rootHandler is our "wildcard handler", so in addition to
+// serving /, it also acts as a router for a few arbitrary
+// patterns that can't be registered at starttime
+// this includes /<username> and 404
 func (s *Site) rootHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
 		s.indexHandler(w, r)

@@ -8,10 +8,6 @@ import (
 func main() {
 	s := New()
 	mux := http.NewServeMux()
-	// since "/" is a wildcard, this anonymous function acts
-	// as a router for patterns that can't be registered at
-	// start time. e.g. /j3s or /j3s/feeds
-
 	// handles /, /<username>, and 404
 	mux.HandleFunc("/", s.rootHandler)
 	mux.HandleFunc("/feeds", s.feedsHandler)
