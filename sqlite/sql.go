@@ -56,9 +56,9 @@ func New(path string) *DB {
 
 // TODO: think more about errors
 
-func (s *DB) GetUsernameBySessionToken(token string) string {
+func (db *DB) GetUsernameBySessionToken(token string) string {
 	var username string
-	err := s.sql.QueryRow("SELECT username FROM user WHERE session_token=?", token).Scan(&username)
+	err := db.sql.QueryRow("SELECT username FROM user WHERE session_token=?", token).Scan(&username)
 	if err == sql.ErrNoRows {
 		return ""
 	}
@@ -68,9 +68,9 @@ func (s *DB) GetUsernameBySessionToken(token string) string {
 	return username
 }
 
-func (s *DB) GetPassword(username string) string {
+func (db *DB) GetPassword(username string) string {
 	var password string
-	err := s.sql.QueryRow("SELECT password FROM user WHERE username=?", username).Scan(&password)
+	err := db.sql.QueryRow("SELECT password FROM user WHERE username=?", username).Scan(&password)
 	if err == sql.ErrNoRows {
 		return ""
 	}
@@ -80,25 +80,25 @@ func (s *DB) GetPassword(username string) string {
 	return password
 }
 
-func (s *DB) SetSessionToken(username string, token string) {
-	_, err := s.sql.Exec("UPDATE user SET session_token=? WHERE username=?", token, username)
+func (db *DB) SetSessionToken(username string, token string) {
+	_, err := db.sql.Exec("UPDATE user SET session_token=? WHERE username=?", token, username)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (s *DB) AddUser(username string, passwordHash string) error {
-	_, err := s.sql.Exec("INSERT INTO user (username, password) VALUES (?, ?)", username, passwordHash)
+func (db *DB) AddUser(username string, passwordHash string) error {
+	_, err := db.sql.Exec("INSERT INTO user (username, password) VALUES (?, ?)", username, passwordHash)
 	return err
 }
 
-func (s *DB) Subscribe(username string, feedURL string) {
-	uid := s.GetUserID(username)
-	fid := s.GetFeedID(feedURL)
+func (db *DB) Subscribe(username string, feedURL string) {
+	uid := db.GetUserID(username)
+	fid := db.GetFeedID(feedURL)
 	var id int
-	err := s.sql.QueryRow("SELECT id FROM subscribe WHERE user_id=? AND feed_id=?", uid, fid).Scan(&id)
+	err := db.sql.QueryRow("SELECT id FROM subscribe WHERE user_id=? AND feed_id=?", uid, fid).Scan(&id)
 	if err == sql.ErrNoRows {
-		_, err := s.sql.Exec("INSERT INTO subscribe (user_id, feed_id) VALUES (?, ?)", uid, fid)
+		_, err := db.sql.Exec("INSERT INTO subscribe (user_id, feed_id) VALUES (?, ?)", uid, fid)
 		if err != nil {
 			panic(err)
 		}
@@ -109,16 +109,16 @@ func (s *DB) Subscribe(username string, feedURL string) {
 	}
 }
 
-func (s *DB) UnsubscribeAll(username string) {
-	_, err := s.sql.Exec("DELETE FROM subscribe WHERE user_id=?", s.GetUserID(username))
+func (db *DB) UnsubscribeAll(username string) {
+	_, err := db.sql.Exec("DELETE FROM subscribe WHERE user_id=?", db.GetUserID(username))
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (s *DB) UserExists(username string) bool {
+func (db *DB) UserExists(username string) bool {
 	var result string
-	err := s.sql.QueryRow("SELECT username FROM user WHERE username=?", username).Scan(&result)
+	err := db.sql.QueryRow("SELECT username FROM user WHERE username=?", username).Scan(&result)
 	if err == sql.ErrNoRows {
 		return false
 	}
@@ -128,9 +128,9 @@ func (s *DB) UserExists(username string) bool {
 	return true
 }
 
-func (s *DB) GetAllFeedURLs() []string {
+func (db *DB) GetAllFeedURLs() []string {
 	// TODO: BAD SELECT STATEMENT!! SORRY :( --wesley
-	rows, err := s.sql.Query("SELECT url FROM feed")
+	rows, err := db.sql.Query("SELECT url FROM feed")
 	if err != nil {
 		panic(err)
 	}
@@ -148,12 +148,12 @@ func (s *DB) GetAllFeedURLs() []string {
 	return urls
 }
 
-func (s *DB) GetUserFeedURLs(username string) []string {
-	uid := s.GetUserID(username)
+func (db *DB) GetUserFeedURLs(username string) []string {
+	uid := db.GetUserID(username)
 
 	// this query returns sql rows representing the list of
 	// rss feed urls the user is subscribed to
-	rows, err := s.sql.Query(`
+	rows, err := db.sql.Query(`
 		SELECT f.url
 		FROM feed f
 		JOIN subscribe s ON f.id = s.feed_id
@@ -179,18 +179,18 @@ func (s *DB) GetUserFeedURLs(username string) []string {
 	return urls
 }
 
-func (s *DB) GetUserID(username string) int {
+func (db *DB) GetUserID(username string) int {
 	var uid int
-	err := s.sql.QueryRow("SELECT id FROM user WHERE username=?", username).Scan(&uid)
+	err := db.sql.QueryRow("SELECT id FROM user WHERE username=?", username).Scan(&uid)
 	if err != nil {
 		panic(err)
 	}
 	return uid
 }
 
-func (s *DB) GetFeedID(feedURL string) int {
+func (db *DB) GetFeedID(feedURL string) int {
 	var fid int
-	err := s.sql.QueryRow("SELECT id FROM feed WHERE url=?", feedURL).Scan(&fid)
+	err := db.sql.QueryRow("SELECT id FROM feed WHERE url=?", feedURL).Scan(&fid)
 	if err != nil {
 		panic(err)
 	}
@@ -199,8 +199,8 @@ func (s *DB) GetFeedID(feedURL string) int {
 
 // WriteFeed writes an rss feed to the database for permanent storage
 // if the given feed already exists, WriteFeed does nothing.
-func (s *DB) WriteFeed(url string) {
-	_, err := s.sql.Exec(`INSERT INTO feed(url) VALUES(?)
+func (db *DB) WriteFeed(url string) {
+	_, err := db.sql.Exec(`INSERT INTO feed(url) VALUES(?)
 				ON CONFLICT(url) DO NOTHING`, url)
 	if err != nil {
 		panic(err)
@@ -209,8 +209,8 @@ func (s *DB) WriteFeed(url string) {
 
 // WriteFeed writes an rss feed to the database for permanent storage
 // if the given feed already exists, WriteFeed does nothing.
-func (s *DB) SetFeedFetchError(url string, fetchErr string) error {
-	_, err := s.sql.Exec("UPDATE feed SET fetch_error=? WHERE url=?", fetchErr, url)
+func (db *DB) SetFeedFetchError(url string, fetchErr string) error {
+	_, err := db.sql.Exec("UPDATE feed SET fetch_error=? WHERE url=?", fetchErr, url)
 	if err != nil {
 		return err
 	}
@@ -219,9 +219,9 @@ func (s *DB) SetFeedFetchError(url string, fetchErr string) error {
 
 // WriteFeed writes an rss feed to the database for permanent storage
 // if the given feed already exists, WriteFeed does nothing.
-func (s *DB) GetFeedFetchError(url string) (string, error) {
+func (db *DB) GetFeedFetchError(url string) (string, error) {
 	var result sql.NullString
-	err := s.sql.QueryRow("SELECT fetch_error FROM feed WHERE url=?", url).Scan(&result)
+	err := db.sql.QueryRow("SELECT fetch_error FROM feed WHERE url=?", url).Scan(&result)
 	if err != nil {
 		return "", err
 	}
