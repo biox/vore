@@ -1,12 +1,20 @@
 html {
   font-family: monospace;
-  max-width: 550px;
-  margin: 10px auto;
+  max-width: 600px;
+  margin: 20px auto;
   /* make sure the scrollbar is always shown so
      the width doesnt change between pages */
+  font-size: calc(14px + 0.5vw);
   overflow-y: scroll;
-  font-size: 120%;
-  line-height: 1.6;
+}
+
+p {
+  font-family: monospace;
+  white-space: pre-wrap;
+}
+
+nav {
+  text-align: center;
 }
 
 a {
@@ -19,10 +27,6 @@ a:hover {
 
 ul a:hover li {
   background-color: #eaddca;
-}
-
-h2 {
-  text-align: center;
 }
 
 ul {
@@ -39,17 +43,6 @@ ul li {
 nav a {
   border-bottom: 1px dotted #000;
   color: #000;
-}
-
-.left-text {
-  display: inline-block;
-  overflow-wrap: break-word;
-  max-width: 80%;
-}
-
-.right-text {
-  float: right;
-  display: inline-block;
 }
 
 .puny {

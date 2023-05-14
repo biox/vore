@@ -65,9 +65,16 @@ func (s *Site) indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if s.loggedIn(r) {
 		http.Redirect(w, r, "/"+s.username(r), http.StatusSeeOther)
-	} else {
-		s.renderPage(w, r, "index", nil)
+		return
 	}
+	s.renderPage(w, r, "index", nil)
+}
+
+func (s *Site) changelogHandler(w http.ResponseWriter, r *http.Request) {
+	if !s.methodAllowed(w, r, "GET") {
+		return
+	}
+	s.renderPage(w, r, "changelog", nil)
 }
 
 func (s *Site) loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -144,15 +151,17 @@ func (s *Site) userHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (s *Site) feedsHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Site) settingsHandler(w http.ResponseWriter, r *http.Request) {
 	if !s.methodAllowed(w, r, "GET") {
+		return
+	}
+	if !s.loggedIn(r) {
+		s.renderErr(w, "", http.StatusUnauthorized)
 		return
 	}
 
 	var feeds []*rss.Feed
-	if s.loggedIn(r) {
-		feeds = s.reaper.GetUserFeeds(s.username(r))
-	}
+	feeds = s.reaper.GetUserFeeds(s.username(r))
 	s.renderPage(w, r, "feeds", feeds)
 }
 
@@ -386,14 +395,8 @@ func (s *Site) methodAllowed(w http.ResponseWriter, r *http.Request, allowedMeth
 
 func (s *Site) randomCutePhrase() string {
 	phrases := []string{
-		"nom nom posts (๑ᵔ⤙ᵔ๑)",
-		"^(;,;)^ vawr",
-		"( -_•)╦̵̵̿╤─ - - - vore",
 		"devouring feeds since 2023",
-		"tfw new rss post (⊙ _ ⊙ )",
-		"( ˘͈ ᵕ ˘͈♡) <3",
-		"voreposting",
-		"vore dot website",
+		"a no-bullshit feed reader",
 	}
 	i := rand.Intn(len(phrases))
 	return phrases[i]

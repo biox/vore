@@ -11,7 +11,8 @@ func main() {
 
 	// rootHandler handles /, /<username>, and 404
 	mux.HandleFunc("/", s.rootHandler)
-	mux.HandleFunc("/feeds", s.feedsHandler)
+	mux.HandleFunc("/changelog", s.changelogHandler)
+	mux.HandleFunc("/feeds", s.settingsHandler)
 	mux.HandleFunc("/feeds/submit", s.feedsSubmitHandler)
 	mux.HandleFunc("/login", s.loginHandler)
 	mux.HandleFunc("/logout", s.logoutHandler)

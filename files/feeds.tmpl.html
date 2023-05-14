@@ -1,14 +1,11 @@
 {{ define "feeds" }}
 {{ template "head" . }}
 {{ template "nav" . }}
-<h3>subscribed feeds</h3>
-{{ if .LoggedIn }}
-{{ $length := len .Data }}
-{{ if eq $length 1 }}
-<p>you're subscribed to 1 feed
-{{ else }}
-<p>you're subscribed to {{ len .Data }} feeds
-{{ end }}
+<h3>Settings</h3>
+<p>timeline: <a href="/{{ .Username }}">https://vore.website/{{ .Username }}</a>
+
+{{ len .Data }} subscriptions:
+</p>
 <form method="POST" action="/feeds/submit">
 <textarea name="submit" rows="10" cols="50">
 {{ range .Data -}}
@@ -16,27 +13,21 @@
 {{ end -}}
 </textarea>
 <br>
-<input type="submit" value="update feeds">
+<input type="submit" value="subscribe">
 </form>
 {{ $length := len .Data }}
 {{ if eq $length 0 }}
-<pre>
-              ‼️ tutorial ‼️
-
-vore supports one type of action: submitting feeds
-
-when you submit feeds:
-  - the feeds are validated and fetched
-  - the feeds are saved to the vore database
-  - your user is subscribed to the feeds
+<p>
+      ‼️ tutorial ‼️
 
 once you have subscribed to some feeds,
-their posts will appear on your <a href="/{{ .Username }}">homepage</a>
+their posts will appear on your timeline.
 
-note that your homepage is public ‼️
+note that all timelines are public ‼️
 
-here are some feed urls to play with - copy them into
-the text box above, then press [update feeds]
+here are some feed urls to play with
+copy them into the text box above
+and press [subscribe]
 
 https://100r.co/links/rss.xml
 https://begriffs.com/atom.xml
@@ -55,20 +46,29 @@ https://sequentialread.com/rss
   /)/)
 ( . .)
 ( づ♡
-</pre>
+</p>
 {{ else if gt $length 0 }}
-<h3>feed details</h3>
+<p>details:</p>
 {{ end }}
 {{ range .Data }}
-<pre>
-{{ .UpdateURL }}
-  title: {{ .Title | trimSpace }}
-   desc: {{ .Description | trimSpace }}
-  items: {{ len .Items }}
-</pre>
+<details>
+	<summary>{{ .UpdateURL }}</summary>
+<p>Title: {{ .Title | trimSpace }}
+Description: "{{ .Description | trimSpace }}"
+Refresh: {{ .Refresh.Format "Jan 02, 15:04:05 UTC" }}
+{{ len .Items }} Items:</p>
+{{ range .Items }}
+<details>
+	<summary>{{ .Title }}</summary>
+<p>Categories: {{ .Categories }}
+Date: {{ .Date }}
+Link: {{ .Link }}
+Summary: "{{ .Summary }}"
+</p>
+</details>
 {{ end }}
-{{ else }}
-	<p>⚠️ unauthorized: please log in
+</p>
+</details>
 {{ end }}
 {{ template "tail" . }}
 {{ end }}

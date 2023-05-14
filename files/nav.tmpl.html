@@ -1,19 +1,16 @@
 {{ define "nav" }}
 <nav>
-	<h2><a href="/{{ .Username }}">vore.website</a></h2>
-	<hr>
-	<span class=left-text>
-		| {{ .CutePhrase }}
-	</span>
-	<span class=right-text>
-		{{ if .LoggedIn }}
-		<a href="/feeds">feeds</a></h3> |
-		<a href="/logout">logout</a>
-		{{ else }}
-		<a href="/login">login</a>
-		{{ end }}
-		|
-	</span>
-	<hr>
+<h2>
+	<a href="/{{ .Username }}">Vore</a>
+	<!--	<small>"{{ .CutePhrase }}"</small> --!>
+</h2>
+<
+	{{ if .LoggedIn }}
+	<a href="/feeds">settings</a> |
+	<a href="/logout">logout</a>
+	{{ else }}
+	<a href="/login">login</a>
+	{{ end }}
+>
 </nav>
 {{ end }}

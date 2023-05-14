@@ -1,58 +1,32 @@
 {{ define "index" }}
 {{ template "head" . }}
 {{ template "nav" . }}
-<pre>
-vore - a simple, multi-tenant feed reader
+<p>
+intro:
 
-features:
-  - rss and atom support
-  - minimal, simple, reliable, fast
-  - refresh your feeds automatically
-  - display a chronological list of feed items
-  - open source & free of charge forever
-    (not the shitty open core kind of way)
-  - <a href="https://j3s.sh">jes</a> built it
+vore.website is a minimal, no-bullshit web-based rss/atom feed reader.
 
-anti-features:
-  - no tags
-  - no options
-  - no javascript
-  - no unread indicators or push notifs
-  - no comments, upvotes, or ranks
+vore.website is free for anyone to use, and will never be turned into a vehicle for profit.
+
+vore.website is a love letter to the rss world - long live syndication!!!
 
 
-welcome internet stranger! ( ˘͈ ᵕ ˘͈♡)
+history:
 
-first of all: where are we? what sort
-of new-york-times-ass looking pile of
-shit has just rendered on your liquid
-crystal display?
+      2020: <a href="https://git.j3s.sh/jrss">jrss</a> is born
+jrss had one concept: define list of feeds, and jrss will keep that list up to date and display it to you via the web.
 
-well, this is vore.
+      2021: <a href="https://git.j3s.sh/j3s.sh">j3s.sh</a> consumes jrss
+my main website eventually consumed jrss because it was easier to maintain.
 
-i made vore because i was sick of the
-state of rss/atom feed readers. my
-needs are extremely basic, and i am
-easily overwhelmed.
+      2023: <a href="https://git.j3s.sh/vore">vore</a>
+vore takes the simple foundation from j3s.sh and exposes it as a hosted service for anyone to use!
+rss lovers rejoice.
 
--> 2020: <a href="https://git.j3s.sh/jrss">jrss</a> is born
-jrss had one concept: define list of
-feeds, and jrss will keep that list up
-to date and display it to you via the
-web.
 
--> 2021: <a href="https://git.j3s.sh/j3s.sh">j3s.sh</a> consumes jrss
-my main website eventually consumed jrss
-because it was easier to maintain.
+love,
 
--> 2023: <a href="https://git.j3s.sh/vore">vore</a>
-vore takes the simple foundation from
-j3s.sh and exposes it as a hosted service
-for anyone to use! rss lovers rejoice.
-
-welcome to vore. enjoy your stay <3
-
-<コ:彡 <コ:彡 <コ:彡 <コ:彡 <コ:彡 <コ:彡 <コ:彡 <コ:彡 <コ:彡
-</pre>
+<a href="https://j3s.sh">jes</a>
+</p>
 {{ template "tail" . }}
 {{ end }}

@@ -4,7 +4,11 @@
 
 {{ $length := len .Data.Items }} {{ if eq $length 0 }}
 {{ if .LoggedIn }}
-<p> -> <a href="/feeds">add your first feed</a></p>
+<p>
+you don't seem to have any feeds yet.
+
+<a href="/feeds">add your first feed here!</a>
+</p>
 {{ end }}
 {{ end }}
 <ul>
