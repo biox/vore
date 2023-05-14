@@ -17,9 +17,8 @@ you don't seem to have any feeds yet.
 	<a href="{{ .Link }}">
 		{{ .Title }}
 	</a>
-	<span class=puny>(<a href="//{{ .Link | printDomain }}">{{ .Link | printDomain }}</a>)</span>
 	<br>
-	<span class=puny title="{{ .Date }}">published {{ .Date | timeSince }} ago</span>
+	<span class=puny title="{{ .Date }}">published {{ .Date | timeSince }} ago via <a href="//{{ .Link | printDomain }}">{{ .Link | printDomain }}</a></span>
 	</li>
 {{ end }}
 </ul>
