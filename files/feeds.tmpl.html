@@ -2,7 +2,8 @@
 {{ template "head" . }}
 {{ template "nav" . }}
 <h3>Settings</h3>
-<p>timeline: <a href="/{{ .Username }}">https://vore.website/{{ .Username }}</a>
+<p><a href="/{{ .Username }}">vore.website/{{ .Username }}</a>
+<a href="/changelog">vore changelog</a>
 
 {{ len .Data }} subscriptions:
 </p>
@@ -48,7 +49,7 @@ https://sequentialread.com/rss
 ( づ♡
 </p>
 {{ else if gt $length 0 }}
-<p>details:</p>
+<p>feed details:</p>
 {{ end }}
 {{ range .Data }}
 <details>
