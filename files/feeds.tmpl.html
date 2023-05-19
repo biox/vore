@@ -61,10 +61,8 @@ Refresh: {{ .Refresh.Format "Jan 02, 15:04:05 UTC" }}
 {{ range .Items }}
 <details>
 	<summary>{{ .Title }}</summary>
-<p>Categories: {{ .Categories }}
-Date: {{ .Date }}
+<p>Date: {{ .Date }}
 Link: {{ .Link }}
-Summary: "{{ .Summary }}"
 </p>
 </details>
 {{ end }}
