@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="300"
+   height="300"
+   viewBox="0 0 300 300"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   sodipodi:docname="original.svg"
+   inkscape:export-filename="../files/static/apple-touch-icon.png"
+   inkscape:export-xdpi="57.599998"
+   inkscape:export-ydpi="57.599998"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#ffffff"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#505050"
+     inkscape:document-units="mm"
+     showgrid="false"
+     showborder="false"
+     inkscape:zoom="2.7433333"
+     inkscape:cx="150"
+     inkscape:cy="150"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-88.429247,-252.219)">
+    <rect
+       style="fill:#ffffff;stroke:none;stroke-width:32;stroke-linecap:round;paint-order:stroke fill markers"
+       id="rect1062"
+       width="300"
+       height="300"
+       x="88.429245"
+       y="252.21899" />
+    <ellipse
+       style="display:none;fill:#ffffff;stroke:none;stroke-width:177.123;stroke-linecap:round;paint-order:stroke fill markers"
+       id="path1008"
+       cx="238.42923"
+       cy="402.21899"
+       rx="120.00002"
+       ry="120" />
+    <path
+       style="color:#000000;fill:#000000;stroke:none;stroke-width:22.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+       d="m 199.67882,390.54935 a 5.60056,5.60056 0 0 0 -3.34414,2.13145 l -20.49961,27.45996 c -13.20644,-7.14236 -20.24258,-14.0123 -20.24258,-14.0123 a 5.6,5.6 0 0 0 -7.92012,0.0328 5.6,5.6 0 0 0 0.0342,7.92011 c 0,0 9.2309,9.00163 26.40586,17.62441 a 5.6,5.6 0 0 0 0.0342,0.0574 5.6,5.6 0 0 0 0.16953,0.0423 c 15.75889,7.88039 38.13726,15.41504 66.43438,15.41504 29.63099,0 51.71276,-7.75469 66.36602,-15.59961 14.65325,-7.84491 22.2373,-16.1082 22.2373,-16.1082 a 5.6,5.6 0 0 0 -0.38008,-7.91055 5.6,5.6 0 0 0 -7.90918,0.37871 c 0,0 -5.9871,6.67444 -19.23359,13.76621 -13.24649,7.09178 -33.39531,14.27344 -61.08047,14.27344 -7.42782,0 -14.35756,-0.57039 -20.85781,-1.50528 l -13.77032,-40.29511 a 5.60056,5.60056 0 0 0 -6.44355,-3.6709 z m -0.72051,17.34005 8.26191,24.17734 c -7.92572,-1.90722 -14.97001,-4.32617 -21.11894,-6.95625 z"
+       id="path734" />
+  </g>
+</svg>

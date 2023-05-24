@@ -1,12 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -45,7 +47,7 @@ func New() *Site {
 // rootHandler is our "wildcard handler", so in addition to
 // serving /, it also acts as a router for a few arbitrary
 // patterns that can't be registered at starttime
-// this includes /<username> and 404
+// this includes /<username>, static files, and 404
 func (s *Site) rootHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
 		s.indexHandler(w, r)
@@ -56,6 +58,13 @@ func (s *Site) rootHandler(w http.ResponseWriter, r *http.Request) {
 		s.userHandler(w, r)
 		return
 	}
+	// handles static files
+	file := filepath.Join("files", "static", strings.TrimPrefix(r.URL.Path, "/"))
+	if _, err := os.Stat(file); !errors.Is(err, os.ErrNotExist) {
+		http.ServeFile(w, r, file)
+		return
+	}
+	// 404
 	http.NotFound(w, r)
 }
 
