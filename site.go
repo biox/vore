@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -431,13 +430,4 @@ func (s *Site) methodAllowed(w http.ResponseWriter, r *http.Request, allowedMeth
 		s.renderErr(w, r.Method, http.StatusMethodNotAllowed)
 	}
 	return allowed
-}
-
-func (s *Site) randomCutePhrase() string {
-	phrases := []string{
-		"devouring feeds since 2023",
-		"a no-bullshit feed reader",
-	}
-	i := rand.Intn(len(phrases))
-	return phrases[i]
 }
