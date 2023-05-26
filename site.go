@@ -3,13 +3,13 @@ package main
 import (
 	"errors"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
-	"text/template"
 	"time"
 
 	"git.j3s.sh/vore/lib"
