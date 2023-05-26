@@ -51,17 +51,23 @@ func (s *Site) rootHandler(w http.ResponseWriter, r *http.Request) {
 		s.indexHandler(w, r)
 		return
 	}
-	// handles /<username>
-	if s.db.UserExists(strings.TrimPrefix(r.URL.Path, "/")) {
-		s.userHandler(w, r)
-		return
-	}
-	// handles static files
-	file := filepath.Join("files", "static", strings.TrimPrefix(r.URL.Path, "/"))
+
+	// path can be /<username> or /<static-file>
+	requestPath := strings.TrimPrefix(r.URL.Path, "/")
+
+	// handles static files first
+	file := filepath.Join("files", "static", requestPath)
 	if _, err := os.Stat(file); !errors.Is(err, os.ErrNotExist) {
 		http.ServeFile(w, r, file)
 		return
 	}
+
+	// handles /<username>
+	if s.db.UserExists(requestPath) {
+		s.userHandler(w, r)
+		return
+	}
+
 	// 404
 	http.NotFound(w, r)
 }
