@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -314,33 +313,22 @@ func (s *Site) renderPage(w http.ResponseWriter, r *http.Request, page string, d
 	tmplFiles := filepath.Join("files", "*.tmpl.html")
 	tmpl := template.Must(template.New("whatever").Funcs(funcMap).ParseGlob(tmplFiles))
 
-	// we read the stylesheet in order to render it inline
-	cssFile := filepath.Join("files", "style.css")
-	stylesheet, err := ioutil.ReadFile(cssFile)
-	if err != nil {
-		panic(err)
-	}
-
 	// fields on this anon struct are generally
 	// pulled out of Data when they're globally required
 	// callers should jam anything they want into Data
 	pageData := struct {
-		Title      string
-		Username   string
-		LoggedIn   bool
-		StyleSheet string
-		CutePhrase string
-		Data       any
+		Title    string
+		Username string
+		LoggedIn bool
+		Data     any
 	}{
-		Title:      page + " | " + s.title,
-		Username:   s.username(r),
-		LoggedIn:   s.loggedIn(r),
-		StyleSheet: string(stylesheet),
-		CutePhrase: s.randomCutePhrase(),
-		Data:       data,
+		Title:    page + " | " + s.title,
+		Username: s.username(r),
+		LoggedIn: s.loggedIn(r),
+		Data:     data,
 	}
 
-	err = tmpl.ExecuteTemplate(w, page, pageData)
+	err := tmpl.ExecuteTemplate(w, page, pageData)
 	if err != nil {
 		s.renderErr(w, err.Error(), http.StatusInternalServerError)
 		return
