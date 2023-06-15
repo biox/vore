@@ -1,7 +1,6 @@
 package reaper
 
 import (
-	"fmt"
 	"log"
 	"sort"
 	"time"
@@ -64,7 +63,6 @@ func (r *Reaper) refreshAllFeeds() {
 	for i := range r.feeds {
 		if r.feeds[i].Stale() {
 			semaphore <- struct{}{}
-			fmt.Println(r.feeds[i].UpdateURL)
 
 			go func(f *rss.Feed) {
 				// ensure we always free the channel
