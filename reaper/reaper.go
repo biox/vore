@@ -1,9 +1,9 @@
 package reaper
 
 import (
+	"fmt"
 	"log"
 	"sort"
-	"sync"
 	"time"
 
 	"git.j3s.sh/vore/rss"
@@ -59,17 +59,22 @@ func (r *Reaper) addFeed(f *rss.Feed) {
 // asynchronously, then prints the duration of the sync
 func (r *Reaper) refreshAllFeeds() {
 	start := time.Now()
-	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, 20)
+
 	for i := range r.feeds {
 		if r.feeds[i].Stale() {
-			wg.Add(1)
+			semaphore <- struct{}{}
+			fmt.Println(r.feeds[i].UpdateURL)
+
 			go func(f *rss.Feed) {
-				defer wg.Done()
+				// ensure we always free the channel
+				defer func() {
+					<-semaphore
+				}()
 				r.refreshFeed(f)
 			}(r.feeds[i])
 		}
 	}
-	wg.Wait()
 	log.Printf("reaper: refresh complete in %s\n", time.Since(start))
 }
 
