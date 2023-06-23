@@ -34,29 +34,6 @@ func TestParseItemLen(t *testing.T) {
 	}
 }
 
-func TestParseContent(t *testing.T) {
-	tests := map[string]string{
-		"rss_2.0_content_encoded": "<p><a href=\"https://example.com/\">Example.com</a> is an example site.</p>",
-	}
-
-	for test, want := range tests {
-		name := filepath.Join("testdata", test)
-		data, err := ioutil.ReadFile(name)
-		if err != nil {
-			t.Fatalf("Reading %s: %v", name, err)
-		}
-
-		feed, err := Parse(data)
-		if err != nil {
-			t.Fatalf("Parsing %s: %v", name, err)
-		}
-
-		if feed.Items[0].Content != want {
-			t.Errorf("%s: got %s, want %s", name, feed.Items[0].Content, want)
-		}
-	}
-}
-
 func TestParseItemDateOK(t *testing.T) {
 	tests := map[string]string{
 		"rss_2.0":                 "2009-09-06 16:45:00 +0000 UTC",

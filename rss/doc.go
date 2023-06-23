@@ -46,7 +46,6 @@ The output structure is pretty much as you'd expect:
 	type Item struct {
 		Title     string
 		Summary   string
-		Content   string
 		Link      string
 		Date      time.Time
 		DateValid bool

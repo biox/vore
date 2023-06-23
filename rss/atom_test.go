@@ -30,33 +30,3 @@ func TestParseAtomTitle(t *testing.T) {
 		}
 	}
 }
-
-func TestParseAtomContent(t *testing.T) {
-	tests := map[string]string{
-		"atom_1.0":           "Volltext des Weblog-Eintrags",
-		"atom_1.0_enclosure": "Volltext des Weblog-Eintrags",
-		"atom_1.0-1":         "",
-		"atom_1.0_html":      "<body>html</body>",
-	}
-
-	for test, want := range tests {
-		name := filepath.Join("testdata", test)
-		data, err := ioutil.ReadFile(name)
-		if err != nil {
-			t.Fatalf("Reading %s: %v", name, err)
-		}
-
-		feed, err := Parse(data)
-		if err != nil {
-			t.Fatalf("Parsing %s: %v", name, err)
-		}
-
-		if feed.Items[0].Content != want {
-			t.Errorf("%s: got %q, want %q", name, feed.Items[0].Content, want)
-		}
-
-		if !feed.Items[0].DateValid {
-			t.Errorf("%s: Invalid date: %q", name, feed.Items[0].Date)
-		}
-	}
-}
