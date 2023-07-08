@@ -44,8 +44,11 @@ func parseAtom(data []byte) (*Feed, error) {
 		next := new(Item)
 		next.Title = item.Title
 		next.Summary = item.Summary
-		if item.Date == "" {
-			item.Date = item.Published
+		if item.Published != "" {
+			next.Date, err = parseTime(item.Published)
+			if err == nil {
+				next.DateValid = true
+			}
 		}
 		if item.Date != "" {
 			next.Date, err = parseTime(item.Date)

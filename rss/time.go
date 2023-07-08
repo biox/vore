@@ -71,6 +71,9 @@ var TimeLayouts = []string{
 
 	// j3s additions
 	"2006-01-02T15:04:05-0700",
+	"2006-01-02",
+	"02 Jan 2006 15:04:05 Z",
+	"Mon, 2 Jan 2006 15:04:05 -0700",
 }
 
 func parseTime(s string) (time.Time, error) {
