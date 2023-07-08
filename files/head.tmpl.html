@@ -10,11 +10,22 @@
 	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 	<link rel='shortcut icon' href='/favicon.ico'>
 	<link rel="stylesheet" href="/style.css">
+	<link rel="stylesheet" href="/dark-mode.css" id="dark-mode">
 	<link rel="manifest" href="/manifest.json">
 
 	<script>
 		if ('serviceWorker' in navigator) {
 			navigator.serviceWorker.register("/serviceworker.js");
+		}
+	</script>
+	
+	<script>
+		const darkModeLink = document.getElementById('dark-mode');
+
+		if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+		darkModeLink.setAttribute('href', 'dark-mode.css');
+		} else {
+		darkModeLink.setAttribute('href', 'style.css');
 		}
 	</script>
 
