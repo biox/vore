@@ -78,6 +78,15 @@ func (db *DB) GetPassword(username string) string {
 	return password
 }
 
+func (db *DB) GetSessionToken(username string) (string, error) {
+	var result sql.NullString
+	err := db.sql.QueryRow("SELECT session_token FROM user WHERE username=?", username).Scan(&result)
+	if err == sql.ErrNoRows {
+		return "", nil
+	}
+	return result.String, err
+}
+
 func (db *DB) SetSessionToken(username string, token string) error {
 	_, err := db.sql.Exec("UPDATE user SET session_token=? WHERE username=?", token, username)
 	return err

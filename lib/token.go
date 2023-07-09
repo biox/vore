@@ -5,12 +5,7 @@ import (
 	"encoding/hex"
 )
 
-func GenerateSessionToken() string {
-	// 32 bytes == 256 bits (AES security margin is 128 bits)
-	return generateSecureToken(32)
-}
-
-func generateSecureToken(length int) string {
+func GenerateSecureToken(length int) string {
 	b := make([]byte, length)
 	if _, err := rand.Read(b); err != nil {
 		return ""

@@ -275,12 +275,17 @@ func (s *Site) login(w http.ResponseWriter, username string, password string) er
 	if err != nil {
 		return fmt.Errorf("invalid password")
 	}
-	sessionToken := lib.GenerateSessionToken()
-	err = s.db.SetSessionToken(username, sessionToken)
+	sessionToken, err := s.db.GetSessionToken(username)
 	if err != nil {
-		log.Println(err)
+		return err
 	}
-
+	if sessionToken == "" {
+		sessionToken = lib.GenerateSecureToken(32)
+		err := s.db.SetSessionToken(username, sessionToken)
+		if err != nil {
+			return err
+		}
+	}
 	http.SetCookie(w, &http.Cookie{
 		Name:    "session_token",
 		Expires: time.Now().Add(time.Hour * 24 * 365),
