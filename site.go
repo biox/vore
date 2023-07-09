@@ -282,9 +282,8 @@ func (s *Site) login(w http.ResponseWriter, username string, password string) er
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name: "session_token",
-		// 18 years
-		Expires: time.Now().Add(time.Hour * 24 * 365 * 18),
+		Name:    "session_token",
+		Expires: time.Now().Add(time.Hour * 24 * 365),
 		Value:   sessionToken,
 	})
 	return nil
