@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -83,11 +84,11 @@ func (s *Site) indexHandler(w http.ResponseWriter, r *http.Request) {
 	s.renderPage(w, r, "index", nil)
 }
 
-func (s *Site) changelogHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Site) discoverHandler(w http.ResponseWriter, r *http.Request) {
 	if !s.methodAllowed(w, r, "GET") {
 		return
 	}
-	s.renderPage(w, r, "changelog", nil)
+	s.renderPage(w, r, "discover", nil)
 }
 
 func (s *Site) loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -327,15 +328,17 @@ func (s *Site) renderPage(w http.ResponseWriter, r *http.Request, page string, d
 	// pulled out of Data when they're globally required
 	// callers should jam anything they want into Data
 	pageData := struct {
-		Title    string
-		Username string
-		LoggedIn bool
-		Data     any
+		Title      string
+		Username   string
+		LoggedIn   bool
+		CutePhrase string
+		Data       any
 	}{
-		Title:    page + " | " + s.title,
-		Username: s.username(r),
-		LoggedIn: s.loggedIn(r),
-		Data:     data,
+		Title:      page + " | " + s.title,
+		Username:   s.username(r),
+		LoggedIn:   s.loggedIn(r),
+		CutePhrase: s.randomCutePhrase(),
+		Data:       data,
 	}
 
 	err := tmpl.ExecuteTemplate(w, page, pageData)
@@ -428,4 +431,21 @@ func (s *Site) methodAllowed(w http.ResponseWriter, r *http.Request, allowedMeth
 		s.renderErr(w, r.Method, http.StatusMethodNotAllowed)
 	}
 	return allowed
+}
+
+func (s *Site) randomCutePhrase() string {
+	phrases := []string{
+		"nom nom posts (๑ᵔ⤙ᵔ๑)",
+		"^(;,;)^ vawr",
+		"( -_•)╦̵̵̿╤─ - - - vore",
+		"devouring feeds since 2023",
+		"tfw new rss post (⊙ _ ⊙ )",
+		"( ˘͈ ᵕ ˘͈♡) <3",
+		"voreposting",
+		"vore dot website",
+		"a no-bullshit feed reader",
+		"*chomp* good feeds",
+	}
+	i := rand.Intn(len(phrases))
+	return phrases[i]
 }
