@@ -49,3 +49,35 @@ nav a {
   color: grey;
   font-size: 0.75rem;
 }
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #1c1c1c;
+    color: #d4d4d4;
+  }
+
+  p {
+    color: #d4d4d4;
+  }
+
+  a {
+    color: #d4d4d4;
+  }
+
+  a:hover {
+    background-color: #3a3a3a;
+  }
+
+  ul a:hover li {
+    background-color: #3a3a3a;
+  }
+
+  nav a {
+    border-bottom: 1px dotted #d4d4d4;
+    color: #d4d4d4;
+  }
+
+  .puny {
+    color: #a0a0a0;
+  }
+}
