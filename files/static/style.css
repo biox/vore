@@ -4,7 +4,6 @@ html {
   margin: 20px auto;
   /* make sure the scrollbar is always shown so
      the width doesnt change between pages */
-  font-size: calc(12px + 0.5vw);
   overflow-y: scroll;
 }
 
@@ -31,8 +30,8 @@ ul a:hover li {
 
 ul {
   list-style-type: none;
-  padding-left: 30px;
-  padding-right: 30px;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 ul li {
