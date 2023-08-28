@@ -93,13 +93,11 @@ func (r *Reaper) handleFeedFetchFailure(url string, err error) {
 	}
 }
 
-// Have checks whether a given url is represented
+// HasFeed checks whether a given url is represented
 // in the reaper cache.
 func (r *Reaper) HasFeed(url string) bool {
-	for _, f := range r.feeds {
-		if f.UpdateURL == url {
-			return true
-		}
+	if _, ok := r.feeds[url]; ok {
+		return true
 	}
 	return false
 }
