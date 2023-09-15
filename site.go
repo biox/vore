@@ -139,7 +139,7 @@ func (s *Site) settingsHandler(w http.ResponseWriter, r *http.Request) {
 
 	var feeds []*rss.Feed
 	feeds = s.reaper.GetUserFeeds(s.username(r))
-	s.renderPage(w, r, "feeds", feeds)
+	s.renderPage(w, r, "settings", feeds)
 }
 
 // TODO:
@@ -147,7 +147,7 @@ func (s *Site) settingsHandler(w http.ResponseWriter, r *http.Request) {
 //	show diff before submission (like tf plan)
 //	check if feed exists in db already?
 //	validate that title exists
-func (s *Site) feedsSubmitHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Site) settingsSubmitHandler(w http.ResponseWriter, r *http.Request) {
 	if !s.loggedIn(r) {
 		s.renderErr(w, "", http.StatusUnauthorized)
 		return
@@ -194,7 +194,7 @@ func (s *Site) feedsSubmitHandler(w http.ResponseWriter, r *http.Request) {
 	for _, url := range validatedURLs {
 		s.db.Subscribe(s.username(r), url)
 	}
-	http.Redirect(w, r, "/feeds", http.StatusSeeOther)
+	http.Redirect(w, r, "/settings", http.StatusSeeOther)
 }
 
 // username fetches a client's username based

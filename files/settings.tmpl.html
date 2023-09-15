@@ -1,4 +1,4 @@
-{{ define "feeds" }}
+{{ define "settings" }}
 {{ template "head" . }}
 {{ template "nav" . }}
 <h3>Settings</h3>
@@ -6,7 +6,7 @@
 
 {{ len .Data }} subscriptions:
 </p>
-<form method="POST" action="/feeds/submit">
+<form method="POST" action="/settings/submit">
 <textarea name="submit" rows="10" cols="50">
 {{ range .Data -}}
 {{ .UpdateURL }}
