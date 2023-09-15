@@ -17,6 +17,7 @@ import (
 	"git.j3s.sh/vore/reaper"
 	"git.j3s.sh/vore/rss"
 	"git.j3s.sh/vore/sqlite"
+	"github.com/jba/muxpatterns"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -43,40 +44,16 @@ func New() *Site {
 	return &s
 }
 
-// rootHandler is our "wildcard handler", so in addition to
-// serving /, it also acts as a router for a few arbitrary
-// patterns that can't be registered at starttime
-// this includes /<username>, static files, and 404
-func (s *Site) rootHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path == "/" {
-		s.indexHandler(w, r)
-		return
-	}
-
-	// path can be /<username> or /<static-file>
-	requestPath := strings.TrimPrefix(r.URL.Path, "/")
-
-	// handles static files first
-	file := filepath.Join("files", "static", requestPath)
+func (s *Site) staticHandler(w http.ResponseWriter, r *http.Request) {
+	file := filepath.Join("files", "static", muxpatterns.PathValue(r, "file"))
 	if _, err := os.Stat(file); !errors.Is(err, os.ErrNotExist) {
 		http.ServeFile(w, r, file)
 		return
 	}
-
-	// handles /<username>
-	if s.db.UserExists(requestPath) {
-		s.userHandler(w, r)
-		return
-	}
-
-	// 404
 	http.NotFound(w, r)
 }
 
 func (s *Site) indexHandler(w http.ResponseWriter, r *http.Request) {
-	if !s.methodAllowed(w, r, "GET") {
-		return
-	}
 	if s.loggedIn(r) {
 		http.Redirect(w, r, "/"+s.username(r), http.StatusSeeOther)
 		return
@@ -85,16 +62,10 @@ func (s *Site) indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Site) discoverHandler(w http.ResponseWriter, r *http.Request) {
-	if !s.methodAllowed(w, r, "GET") {
-		return
-	}
 	s.renderPage(w, r, "discover", nil)
 }
 
 func (s *Site) loginHandler(w http.ResponseWriter, r *http.Request) {
-	if !s.methodAllowed(w, r, "GET", "POST") {
-		return
-	}
 	if r.Method == "GET" {
 		if s.loggedIn(r) {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -117,9 +88,6 @@ func (s *Site) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 // TODO: make this take a POST only in accordance w/ some spec
 func (s *Site) logoutHandler(w http.ResponseWriter, r *http.Request) {
-	if !s.methodAllowed(w, r, "GET", "POST") {
-		return
-	}
 	http.SetCookie(w, &http.Cookie{
 		Name:  "session_token",
 		Value: "",
@@ -128,9 +96,6 @@ func (s *Site) logoutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Site) registerHandler(w http.ResponseWriter, r *http.Request) {
-	if !s.methodAllowed(w, r, "POST") {
-		return
-	}
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 	err := s.register(username, password)
@@ -147,11 +112,13 @@ func (s *Site) registerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Site) userHandler(w http.ResponseWriter, r *http.Request) {
-	if !s.methodAllowed(w, r, "GET") {
+	username := muxpatterns.PathValue(r, "username")
+
+	if !s.db.UserExists(username) {
+		http.NotFound(w, r)
 		return
 	}
 
-	username := strings.TrimPrefix(r.URL.Path, "/")
 	items := s.reaper.SortFeedItemsByDate(s.reaper.GetUserFeeds(username))
 	data := struct {
 		User  string
@@ -162,13 +129,9 @@ func (s *Site) userHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.renderPage(w, r, "user", data)
-
 }
 
 func (s *Site) settingsHandler(w http.ResponseWriter, r *http.Request) {
-	if !s.methodAllowed(w, r, "GET") {
-		return
-	}
 	if !s.loggedIn(r) {
 		s.renderErr(w, "", http.StatusUnauthorized)
 		return
@@ -185,9 +148,6 @@ func (s *Site) settingsHandler(w http.ResponseWriter, r *http.Request) {
 //	check if feed exists in db already?
 //	validate that title exists
 func (s *Site) feedsSubmitHandler(w http.ResponseWriter, r *http.Request) {
-	if !s.methodAllowed(w, r, "POST") {
-		return
-	}
 	if !s.loggedIn(r) {
 		s.renderErr(w, "", http.StatusUnauthorized)
 		return
@@ -403,9 +363,6 @@ func (s *Site) renderErr(w http.ResponseWriter, error string, code int) {
 		prefix = "400 bad request\n"
 	case http.StatusUnauthorized:
 		prefix = "401 unauthorized\n"
-	case http.StatusMethodNotAllowed:
-		prefix = "405 method not allowed\n"
-		prefix += "request method: "
 	case http.StatusInternalServerError:
 		prefix = "(╥﹏╥) oopsie woopsie, uwu\n"
 		prefix += "we made a fucky wucky (╥﹏╥)\n\n"
@@ -413,24 +370,6 @@ func (s *Site) renderErr(w http.ResponseWriter, error string, code int) {
 	}
 	log.Println(prefix + error)
 	http.Error(w, prefix+error, code)
-}
-
-// methodAllowed takes an http w/r, and returns true if the
-// http requests method is in teh allowedMethods list.
-// if methodNotAllowed returns false, it has already
-// written a request & it's on the caller to close it.
-func (s *Site) methodAllowed(w http.ResponseWriter, r *http.Request, allowedMethods ...string) bool {
-	allowed := false
-	for _, m := range allowedMethods {
-		if m == r.Method {
-			allowed = true
-		}
-	}
-	if allowed == false {
-		w.Header().Set("Allow", strings.Join(allowedMethods, ", "))
-		s.renderErr(w, r.Method, http.StatusMethodNotAllowed)
-	}
-	return allowed
 }
 
 func (s *Site) randomCutePhrase() string {
