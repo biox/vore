@@ -2,10 +2,17 @@ package sqlite
 
 import (
 	"database/sql"
+	"embed"
+	"fmt"
+	"io/fs"
 	"log"
+	"strings"
 
 	_ "github.com/glebarez/go-sqlite"
 )
+
+//go:embed migrations/*.sql
+var migrationFiles embed.FS
 
 type DB struct {
 	sql *sql.DB
@@ -19,36 +26,48 @@ func New(path string) *DB {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// user
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS user (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                session_token TEXT UNIQUE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`)
+
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY)")
 	if err != nil {
 		log.Fatal(err)
 	}
-	// feed
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS feed (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                url TEXT UNIQUE NOT NULL,
-                fetch_error TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`)
+
+	var latestVersion int
+	row := db.QueryRow("SELECT MAX(version) FROM schema_migrations")
+	err = row.Scan(&latestVersion)
+	if err != nil {
+		if strings.Contains(err.Error(), "converting NULL to int is unsupported") {
+			// assume that we're starting from ground zero
+			latestVersion = 0
+		} else {
+			log.Fatal(err)
+		}
+	}
+
+	files, err := fs.ReadDir(migrationFiles, "migrations")
 	if err != nil {
 		log.Fatal(err)
 	}
-	// subscribe
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS subscribe (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                feed_id INTEGER NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`)
-	if err != nil {
-		log.Fatal(err)
+	for _, f := range files {
+		var version int
+		_, err = fmt.Sscanf(f.Name(), "%d_", &version)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Apply migration if not already applied
+		if version > latestVersion {
+			fileData, _ := fs.ReadFile(migrationFiles, "migrations/"+f.Name())
+			_, err := db.Exec(string(fileData))
+			if err != nil {
+				log.Fatalf("Failed to apply migration %s: %v", f.Name(), err)
+			}
+			_, err = db.Exec(`INSERT INTO schema_migrations (version) VALUES (?)`, version)
+			if err != nil {
+				log.Fatalf("Failed to record migration version %d: %v", version, err)
+			}
+			fmt.Printf("Applied migration %s\n", f.Name())
+		}
 	}
 
 	return &DB{sql: db}
