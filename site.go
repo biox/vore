@@ -197,6 +197,32 @@ func (s *Site) settingsSubmitHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/settings", http.StatusSeeOther)
 }
 
+func (s *Site) feedDetailsHandler(w http.ResponseWriter, r *http.Request) {
+	encodedURL := muxpatterns.PathValue(r, "url")
+	decodedURL, err := url.QueryUnescape(encodedURL)
+	if err != nil {
+		e := fmt.Sprintf("failed to decode URL '%s' %s", encodedURL, err)
+		s.renderErr(w, e, http.StatusBadRequest)
+		return
+	}
+	fetchErr, err := s.db.GetFeedFetchError(decodedURL)
+	if err != nil {
+		e := fmt.Sprintf("failed to fetch feed error '%s' %s", encodedURL, err)
+		s.renderErr(w, e, http.StatusBadRequest)
+		return
+	}
+
+	feedData := struct {
+		Feed         *rss.Feed
+		FetchFailure string
+	}{
+		Feed:         s.reaper.GetFeed(decodedURL),
+		FetchFailure: fetchErr,
+	}
+
+	s.renderPage(w, r, "feedDetails", feedData)
+}
+
 // username fetches a client's username based
 // on the sessionToken that user has set. username
 // will return "" if there is no sessionToken.
@@ -279,6 +305,7 @@ func (s *Site) renderPage(w http.ResponseWriter, r *http.Request, page string, d
 		"printDomain": s.printDomain,
 		"timeSince":   s.timeSince,
 		"trimSpace":   strings.TrimSpace,
+		"escapeURL":   url.QueryEscape,
 	}
 
 	tmplFiles := filepath.Join("files", "*.tmpl.html")

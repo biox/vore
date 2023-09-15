@@ -102,6 +102,10 @@ func (r *Reaper) HasFeed(url string) bool {
 	return false
 }
 
+func (r *Reaper) GetFeed(url string) *rss.Feed {
+	return r.feeds[url]
+}
+
 // GetUserFeeds returns a list of feeds
 func (r *Reaper) GetUserFeeds(username string) []*rss.Feed {
 	urls := r.db.GetUserFeedURLs(username)

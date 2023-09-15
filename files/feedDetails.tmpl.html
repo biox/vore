@@ -1,0 +1,21 @@
+{{ define "feedDetails" }}
+{{ template "head" . }}
+{{ template "nav" . }}
+<h3>{{ .Data.Feed.UpdateURL }}</h3>
+<p>
+Title: {{ .Data.Feed.Title }}
+Description: {{ .Data.Feed.Description }}
+Next Refresh: {{ .Data.Feed.Refresh }}
+Last Fetch Failure: {{ .Data.FetchFailure }}
+</p>
+{{ len .Data.Feed.Items }} Items:</p>
+{{ range .Data.Feed.Items }}
+<details>
+<summary>{{ .Title }}</summary>
+<p>Date: {{ .Date }}
+Link: <a href="{{ .Link }}">{{ .Link }}</a>
+</p>
+</details>
+{{ end }}
+{{ template "tail" . }}
+{{ end }}

@@ -22,6 +22,7 @@ func main() {
 	mux.HandleFunc("GET /logout", s.logoutHandler)
 	mux.HandleFunc("POST /logout", s.logoutHandler)
 	mux.HandleFunc("POST /register", s.registerHandler)
+	mux.HandleFunc("GET /feeds/{url}", s.feedDetailsHandler)
 
 	// left in-place for backwards compat
 	mux.HandleFunc("GET /feeds", s.settingsHandler)

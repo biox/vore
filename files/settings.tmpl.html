@@ -48,25 +48,12 @@ https://sequentialread.com/rss
 ( づ♡
 </p>
 {{ else if gt $length 0 }}
-<p>feed details:</p>
+<p>feed details 👁️👄👁️</p>
 {{ end }}
-{{ range .Data }}
-<details>
-	<summary>{{ .UpdateURL }}</summary>
-<p>Title: {{ .Title | trimSpace }}
-Description: "{{ .Description | trimSpace }}"
-Refresh: {{ .Refresh.Format "Jan 02, 15:04:05 UTC" }}
-{{ len .Items }} Items:</p>
-{{ range .Items }}
-<details>
-	<summary>{{ .Title }}</summary>
-<p>Date: {{ .Date }}
-Link: {{ .Link }}
+<p>
+{{ range .Data -}}
+<a href="/feeds/{{ .UpdateURL | escapeURL }}">{{ .UpdateURL }}</a>
+{{ end -}}
 </p>
-</details>
-{{ end }}
-</p>
-</details>
-{{ end }}
 {{ template "tail" . }}
 {{ end }}
