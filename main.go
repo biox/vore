@@ -3,11 +3,13 @@ package main
 import (
 	"log"
 	"net/http"
+
+	"github.com/jba/muxpatterns"
 )
 
 func main() {
 	s := New()
-	mux := http.NewServeMux()
+	mux := muxpatterns.NewServeMux()
 
 	mux.HandleFunc("GET /{$}", s.indexHandler)
 	mux.HandleFunc("GET /{username}", s.userHandler)
