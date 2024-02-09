@@ -34,10 +34,9 @@ type Site struct {
 
 // New returns a fully populated & ready for action Site
 func New() *Site {
-	title := "vore"
-	db := sqlite.New(title + ".db")
+	db := sqlite.New("vore.db?_pragma=journal_mode(WAL)")
 	s := Site{
-		title:  title,
+		title:  "vore",
 		reaper: reaper.New(db),
 		db:     db,
 	}
