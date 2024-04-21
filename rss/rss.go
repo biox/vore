@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"strings"
@@ -68,6 +69,8 @@ func FetchByFunc(fetchFunc FetchFunc, url string) (*Feed, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	log.Println("rss: ok i got the bytes for this url: " + url)
 
 	out, err := Parse(body)
 	if err != nil {

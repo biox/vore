@@ -44,7 +44,9 @@ func (r *Reaper) start() {
 	}
 
 	for {
+		log.Println("reaper start: refresh all feeds")
 		r.refreshAllFeeds()
+		log.Println("reaper end: completed all feeds, sleeping")
 		time.Sleep(15 * time.Minute)
 	}
 }
@@ -69,7 +71,10 @@ func (r *Reaper) refreshAllFeeds() {
 				defer func() {
 					<-semaphore
 				}()
+				t := time.Now()
+				log.Printf("reaper feed %s started\n", r.feeds[i].UpdateURL)
 				r.refreshFeed(f)
+				log.Printf("reaper end: feed %s refreshed, took %s\n", r.feeds[i].UpdateURL, time.Since(t))
 			}(r.feeds[i])
 		}
 	}
