@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"log"
 	"strings"
+	"time"
 
 	_ "github.com/glebarez/go-sqlite"
 )
@@ -16,6 +17,13 @@ var migrationFiles embed.FS
 
 type DB struct {
 	sql *sql.DB
+}
+
+type SavedItem struct {
+	ArchiveURL string
+	CreatedAt  time.Time
+	ItemTitle  string
+	ItemURL    string
 }
 
 // New opens a sqlite database, populates it with tables, and
@@ -203,6 +211,32 @@ func (db *DB) GetUserFeedURLs(username string) []string {
 	return urls
 }
 
+func (db *DB) GetUserSavedItems(username string) []SavedItem {
+	uid := db.GetUserID(username)
+
+	rows, err := db.sql.Query(`SELECT item_url, item_title, archive_url, created_at
+				FROM saved_item WHERE user_id = ?
+				ORDER BY created_at DESC`, uid)
+	if err == sql.ErrNoRows {
+		return []SavedItem{}
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	var savedItems []SavedItem
+	for rows.Next() {
+		var si SavedItem
+		err = rows.Scan(&si.ItemURL, &si.ItemTitle, &si.ArchiveURL, &si.CreatedAt)
+		if err != nil {
+			log.Fatal(err)
+		}
+		savedItems = append(savedItems, si)
+	}
+	return savedItems
+}
+
 func (db *DB) GetUserID(username string) int {
 	var uid int
 	err := db.sql.QueryRow("SELECT id FROM user WHERE username=?", username).Scan(&uid)
@@ -229,6 +263,16 @@ func (db *DB) WriteFeed(url string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func (db *DB) WriteSavedItem(username string, item SavedItem) error {
+	uid := db.GetUserID(username)
+
+	_, err := db.sql.Exec(`
+	INSERT INTO saved_item(user_id, item_url, item_title, archive_url)
+	VALUES(?, ?, ?, ?)`, uid, item.ItemURL, item.ItemTitle, item.ArchiveURL)
+
+	return err
 }
 
 // WriteFeed writes an rss feed to the database for permanent storage

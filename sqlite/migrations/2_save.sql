@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS saved_item (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     user_id INTEGER NOT NULL,
+     item_url TEXT NOT NULL,
+     item_title TEXT NOT NULL,
+     archive_url TEXT NOT NULL,
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

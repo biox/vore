@@ -12,6 +12,7 @@ func main() {
 
 	http.HandleFunc("GET /{$}", s.indexHandler)
 	http.HandleFunc("GET /{username}", s.userHandler)
+	http.HandleFunc("GET /saves", s.userSavesHandler)
 	http.HandleFunc("GET /static/{file}", s.staticHandler)
 	http.HandleFunc("GET /discover", s.discoverHandler)
 	http.HandleFunc("GET /settings", s.settingsHandler)
@@ -21,6 +22,7 @@ func main() {
 	http.HandleFunc("GET /logout", s.logoutHandler)
 	http.HandleFunc("POST /logout", s.logoutHandler)
 	http.HandleFunc("POST /register", s.registerHandler)
+	http.HandleFunc("GET /save/{url}", s.saveHandler)
 	http.HandleFunc("GET /feeds/{url}", s.feedDetailsHandler)
 
 	// left in-place for backwards compat

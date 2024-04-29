@@ -1,0 +1,42 @@
+{{ define "saves" }}
+{{ template "head" . }}
+{{ template "nav" . }}
+
+{{ $length := len .Data }} {{ if eq $length 0 }}
+{{ if .LoggedIn }}
+<p>
+you haven't saved anything yet. :(
+
+use the "save" button to save posts that you like!
+
+vore's save system is unique:
+  when you click the "save" button, vore will:
+    - store the article title & domain
+    - submit an https://archive.is request on your behalf
+    - store the archive.is link
+
+this ensures that all saved articles will remain
+accessible indefinitely.
+
+it also means that you may save the same article
+more than once, if you'd like!
+
+currently, saves cannot be deleted.
+</p>
+{{ end }}
+{{ end }}
+<ul>
+{{ range .Data }}
+	<li>
+	<a href="{{ .ItemURL }}">{{ .ItemTitle }}</a>
+	<span class=puny>
+		(<a href="{{ .ArchiveURL }}">archived</a>)
+	</span>
+	<br>
+	<span class=puny>saved {{ .CreatedAt }} via <a href="//{{ .ItemURL | printDomain }}">{{ .ItemURL | printDomain }}</a></span>
+	</li>
+{{ end }}
+</ul>
+
+{{ template "tail" . }}
+{{ end }}

@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"git.j3s.sh/vore/archiveis"
 	"git.j3s.sh/vore/lib"
 	"git.j3s.sh/vore/reaper"
 	"git.j3s.sh/vore/rss"
@@ -29,6 +30,10 @@ type Site struct {
 
 	// site database handle
 	db *sqlite.DB
+}
+
+type Save struct {
+	// inferred: user_id
 }
 
 // New returns a fully populated & ready for action Site
@@ -53,7 +58,8 @@ func (s *Site) staticHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *Site) indexHandler(w http.ResponseWriter, r *http.Request) {
 	if s.loggedIn(r) {
-		http.Redirect(w, r, "/"+s.username(r), http.StatusSeeOther)
+		username := s.username(r)
+		http.Redirect(w, r, "/"+username, http.StatusSeeOther)
 		return
 	}
 	s.renderPage(w, r, "index", nil)
@@ -66,7 +72,8 @@ func (s *Site) discoverHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Site) loginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		if s.loggedIn(r) {
-			http.Redirect(w, r, "/", http.StatusSeeOther)
+			username := s.username(r)
+			http.Redirect(w, r, "/"+username, http.StatusSeeOther)
 		} else {
 			s.renderPage(w, r, "login", nil)
 		}
@@ -80,7 +87,7 @@ func (s *Site) loginHandler(w http.ResponseWriter, r *http.Request) {
 			s.renderErr(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		http.Redirect(w, r, "/"+username, http.StatusSeeOther)
 	}
 }
 
@@ -109,6 +116,48 @@ func (s *Site) registerHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
+// saveHandler is an HTMX endpoint that returns the text "saved!" when
+// a post has been saved to a user's account
+func (s *Site) saveHandler(w http.ResponseWriter, r *http.Request) {
+	if !s.loggedIn(r) {
+		s.renderErr(w, "", http.StatusUnauthorized)
+		return
+	}
+
+	username := s.username(r)
+	encodedURL := r.PathValue("url")
+	decodedURL, err := url.QueryUnescape(encodedURL)
+	if err != nil {
+		e := fmt.Sprintf("failed to decode URL '%s' %s", encodedURL, err)
+		s.renderErr(w, e, http.StatusBadRequest)
+		return
+	}
+
+	item, err := s.reaper.GetItem(decodedURL)
+	if err != nil {
+		fmt.Fprintf(w, "error!")
+		return
+	}
+	archiveURL, err := archiveis.Capture(decodedURL)
+	if err != nil {
+		log.Println(err)
+		fmt.Fprintf(w, "error capturing archive!!")
+		return
+	}
+
+	err = s.db.WriteSavedItem(username, sqlite.SavedItem{
+		ArchiveURL: archiveURL,
+		ItemTitle:  item.Title,
+		ItemURL:    item.Link,
+	})
+	if err != nil {
+		log.Println(err)
+		fmt.Fprintf(w, "error!!!")
+		return
+	}
+	fmt.Fprintf(w, "saved! you can go back now. this will eventually be async. lol.")
+}
+
 func (s *Site) userHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.PathValue("username")
 
@@ -129,6 +178,17 @@ func (s *Site) userHandler(w http.ResponseWriter, r *http.Request) {
 	s.renderPage(w, r, "user", data)
 }
 
+func (s *Site) userSavesHandler(w http.ResponseWriter, r *http.Request) {
+	if !s.loggedIn(r) {
+		s.renderErr(w, "", http.StatusUnauthorized)
+		return
+	}
+
+	username := s.username(r)
+	saves := s.db.GetUserSavedItems(username)
+	s.renderPage(w, r, "saves", saves)
+}
+
 func (s *Site) settingsHandler(w http.ResponseWriter, r *http.Request) {
 	if !s.loggedIn(r) {
 		s.renderErr(w, "", http.StatusUnauthorized)
@@ -140,11 +200,9 @@ func (s *Site) settingsHandler(w http.ResponseWriter, r *http.Request) {
 	s.renderPage(w, r, "settings", feeds)
 }
 
-// TODO:
-//
-//	show diff before submission (like tf plan)
-//	check if feed exists in db already?
-//	validate that title exists
+// TODO: show diff before submission (like tf plan)
+// check if feed exists in db already?
+// validate that title exists
 func (s *Site) settingsSubmitHandler(w http.ResponseWriter, r *http.Request) {
 	if !s.loggedIn(r) {
 		s.renderErr(w, "", http.StatusUnauthorized)
@@ -187,7 +245,10 @@ func (s *Site) settingsSubmitHandler(w http.ResponseWriter, r *http.Request) {
 		s.db.WriteFeed(u)
 	}
 
-	// subscribe to all listed feeds exclusively
+	// TODO: this is insane, make it a transaction
+	//       so people don't lose feed subscriptions
+	//       if vore restarts in the middle of this
+	//       process.
 	s.db.UnsubscribeAll(s.username(r))
 	for _, url := range validatedURLs {
 		s.db.Subscribe(s.username(r), url)
@@ -319,7 +380,7 @@ func (s *Site) renderPage(w http.ResponseWriter, r *http.Request, page string, d
 		CutePhrase string
 		Data       any
 	}{
-		Title:      page + " | " + s.title,
+		Title:      page,
 		Username:   s.username(r),
 		LoggedIn:   s.loggedIn(r),
 		CutePhrase: s.randomCutePhrase(),
@@ -333,9 +394,8 @@ func (s *Site) renderPage(w http.ResponseWriter, r *http.Request, page string, d
 	}
 }
 
-// printDomain does a best-effort uri parse and
-// prints the base domain, otherwise returning the
-// unmodified string
+// printDomain does a best-effort uri parse, returning a string
+// that may still contain special characters
 func (s *Site) printDomain(rawURL string) string {
 	parsedURL, err := url.Parse(rawURL)
 	if err == nil {

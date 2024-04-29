@@ -16,3 +16,35 @@
     - no javascript
     - no unread indicators or push notifs
     - no comments, upvotes, or ranks
+
+  dev notes
+    - vore should always trust websites as the source of authority
+      this is why posts aren't saved to disk - there's no good way to
+      uniquely identify them over time easily. a new website might
+      show up & reuse the post urls, and i want to avoid all of the
+      complexities that introduces by just fetching feeds at runtime
+      & loading them live - that way we're SURE they're fresh and
+      accurate.
+  
+    - do not natively display posts
+      posts always look like shit away from their home websites. instead
+      of doing any of that nonsense, vore just takes website snapshots
+      via archive.is and presents them to the user.
+  
+    - saved entries will NEVER change/expire
+      if a user uses the "save" feature, the data they were looking at
+      must never be lost.
+      therefore, we just copy whatever the active post state was from
+      memory & also snapshot the website via archive.is & link to the
+      snapshot. this way, there's always a cached version available
+      to use.
+  
+      website may be saved multiple times, i don't care.
+  
+      TODO "this has been saved already" indicator
+    - vore prefers raw URLs, we don't care about traditional RSS
+      formats like OPML
+
+  soon(tm):
+    - non-active feeds will be retried at a much slower cadence
+      (& remembered across restarts)

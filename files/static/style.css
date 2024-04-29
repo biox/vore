@@ -1,6 +1,6 @@
 html {
   font-family: monospace;
-  max-width: 600px;
+  max-width: 500px;
   margin: 20px auto;
   /* make sure the scrollbar is always shown so
      the width doesnt change between pages */
@@ -40,11 +40,19 @@ ul li {
 }
 
 nav a {
-  border-bottom: 1px dotted #000;
   color: #000;
 }
 
+nav .left {
+	float: left;
+}
+
+nav .right {
+	float: right;
+}
+
 .puny {
+  padding-top: 0px;
   color: grey;
   font-size: 0.75rem;
 }

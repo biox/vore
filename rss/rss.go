@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"strings"
@@ -65,12 +63,10 @@ func FetchByFunc(fetchFunc FetchFunc, url string) (*Feed, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-
-	log.Println("rss: ok i got the bytes for this url: " + url)
 
 	out, err := Parse(body)
 	if err != nil {

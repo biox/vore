@@ -1,14 +1,19 @@
 {{ define "nav" }}
 <nav>
-<h2>
-	<a href="/{{ .Username }}">Vore</a>
-</h2>
-	<a href="/discover">discover</a>
+	<h2>
+		<a href="/">
+			vore.website
+		</a>
+	</h2>
 	{{ if .LoggedIn }}
-	<a href="/settings">settings</a>
-	<a href="/logout">logout</a>
+	<a {{ if eq .Title "user" }}style="font-weight: bold;"{{ end }} href="/{{ .Username }}">home</a>
+	| <a {{ if eq .Title "saves" }}style="font-weight: bold;"{{ end }} href="/saves">saves</a>
+	| <a {{ if eq .Title "discover" }}style="font-weight: bold;"{{ end }} href="/discover">discover</a>
+	| <a {{ if eq .Title "settings" }}style="font-weight: bold;"{{ end }} href="/settings">settings</a>
+	| <a href="/logout">logout</a>
 	{{ else }}
-	<a href="/login">login</a>
+	<a {{ if eq .Title "discover" }}style="font-weight: bold;"{{ end }} href="/discover">discover</a>
+	| <a {{ if eq .Title "login" }}style="font-weight: bold;"{{ end }}href="/login">login</a>
 	{{ end }}
 </nav>
 {{ end }}

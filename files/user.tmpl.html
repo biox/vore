@@ -7,7 +7,7 @@
 <p>
 you don't seem to have any feeds yet.
 
-<a href="/settings">add your first feed here!</a>
+go to <a href="/settings">/settings</a> to add your first feed!
 </p>
 {{ end }}
 {{ end }}
@@ -18,7 +18,12 @@ you don't seem to have any feeds yet.
 		{{ .Title }}
 	</a>
 	<br>
-	<span class=puny title="{{ .Date }}">published {{ .Date | timeSince }} via <a href="//{{ .Link | printDomain }}">{{ .Link | printDomain }}</a></span>
+	<span class=puny title="{{ .Date }}">
+		published {{ .Date | timeSince }} via
+		<a href="//{{ .Link | printDomain }}">
+			{{ .Link | printDomain }}</a>
+		| <a href="/save/{{ .Link | escapeURL }}">save</a>
+	</span>
 	</li>
 {{ end }}
 </ul>

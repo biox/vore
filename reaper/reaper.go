@@ -1,6 +1,7 @@
 package reaper
 
 import (
+	"errors"
 	"log"
 	"sort"
 	"sync"
@@ -45,9 +46,9 @@ func (r *Reaper) start() {
 	}
 
 	for {
-		log.Println("reaper start: refresh all feeds")
+		log.Println("reaper: refreshing all feeds")
 		r.refreshAllFeeds()
-		log.Println("reaper end: completed all feeds, sleeping")
+		log.Println("reaper: refreshed all feeds, sleeping 😴")
 		time.Sleep(15 * time.Minute)
 	}
 }
@@ -62,6 +63,7 @@ func (r *Reaper) addFeed(f *rss.Feed) {
 func (r *Reaper) refreshAllFeeds() {
 	ch := make(chan *rss.Feed)
 	var wg sync.WaitGroup
+	// i chose 20 workers somewhat arbitrarily
 	for i := 20; i > 0; i-- {
 		wg.Add(1)
 
@@ -70,9 +72,8 @@ func (r *Reaper) refreshAllFeeds() {
 
 			for f := range ch {
 				start := time.Now()
-				log.Printf("refreshing %s\n", f.UpdateURL)
 				r.refreshFeed(f)
-				log.Printf("%s refreshed in %s\n", f.UpdateURL, time.Since(start))
+				log.Printf("reaper: %s refreshed in %s\n", f.UpdateURL, time.Since(start))
 			}
 		}()
 	}
@@ -97,10 +98,10 @@ func (r *Reaper) refreshFeed(f *rss.Feed) {
 }
 
 func (r *Reaper) handleFeedFetchFailure(url string, err error) {
-	log.Printf("[err] reaper: fetch failure '%s': %s\n", url, err)
+	log.Printf("reaper: failed to fetch %s: %s\n", url, err)
 	err = r.db.SetFeedFetchError(url, err.Error())
 	if err != nil {
-		log.Printf("[err] reaper: could not set feed fetch error '%s'\n", err)
+		log.Printf("reaper: could not set feed fetch error '%s'\n", err)
 	}
 }
 
@@ -117,6 +118,19 @@ func (r *Reaper) GetFeed(url string) *rss.Feed {
 	return r.feeds[url]
 }
 
+// GetItem recurses through all rss feeds, returning the first
+// found feed by matching against the provided link
+func (r *Reaper) GetItem(url string) (*rss.Item, error) {
+	for _, f := range r.feeds {
+		for _, i := range f.Items {
+			if i.Link == url {
+				return i, nil
+			}
+		}
+	}
+	return &rss.Item{}, errors.New("item not found")
+}
+
 // GetUserFeeds returns a list of feeds
 func (r *Reaper) GetUserFeeds(username string) []*rss.Feed {
 	urls := r.db.GetUserFeedURLs(username)
@@ -130,6 +144,7 @@ func (r *Reaper) GetUserFeeds(username string) []*rss.Feed {
 	return result
 }
 
+// SortFeeds sorts reaper feeds chronologically by date
 func (r *Reaper) SortFeeds(f []*rss.Feed) {
 	sort.Slice(f, func(i, j int) bool {
 		return f[i].UpdateURL < f[j].UpdateURL
