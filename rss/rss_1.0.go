@@ -29,7 +29,6 @@ func parseRSS1(data []byte) (*Feed, error) {
 	out.Title = channel.Title
 	out.Description = channel.Description
 	out.Link = channel.Link
-	out.Image = channel.Image.Image()
 	if channel.MinsToLive != 0 {
 		sort.Ints(channel.SkipHours)
 		next := time.Now().Add(time.Duration(channel.MinsToLive) * time.Minute)
@@ -82,7 +81,6 @@ func parseRSS1(data []byte) (*Feed, error) {
 
 		next := new(Item)
 		next.Title = item.Title
-		next.Summary = item.Description
 		next.Link = item.Link
 		if item.Date != "" {
 			next.Date, err = parseTime(item.Date)
