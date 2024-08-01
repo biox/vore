@@ -2,10 +2,12 @@ package reaper
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"sort"
 	"sync"
 	"time"
+	"unsafe"
 
 	"git.j3s.sh/vore/rss"
 	"git.j3s.sh/vore/sqlite"
@@ -95,6 +97,7 @@ func (r *Reaper) refreshFeed(f *rss.Feed) {
 	if err != nil {
 		r.handleFeedFetchFailure(f.UpdateURL, err)
 	}
+	fmt.Printf("size of %s: %d bytes\n", f.UpdateURL, unsafe.Sizeof(f))
 }
 
 func (r *Reaper) handleFeedFetchFailure(url string, err error) {
