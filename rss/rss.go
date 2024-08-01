@@ -92,6 +92,7 @@ type Feed struct {
 	Description string              `json:"description"`
 	Link        string              `json:"link"`      // Link to the creator's website.
 	UpdateURL   string              `json:"updateurl"` // URL of the feed itself.
+	Image       *Image              `json:"image"`     // Feed icon.
 	Categories  []string            `json:"categories"`
 	Items       []*Item             `json:"items"`
 	ItemMap     map[string]struct{} `json:"itemmap"` // Used in checking whether an item has been seen before.
@@ -194,6 +195,7 @@ func (f *Feed) String() string {
 		fmt.Fprintf(w, "\xff\t\xffDescription:\t%q\n", f.Description)
 		fmt.Fprintf(w, "\xff\t\xffLink:\t%q\n", f.Link)
 		fmt.Fprintf(w, "\xff\t\xffUpdateURL:\t%q\n", f.UpdateURL)
+		fmt.Fprintf(w, "\xff\t\xffImage:\t%q (%s)\n", f.Image.Title, f.Image.URL)
 		fmt.Fprintf(w, "\xff\t\xffRefresh:\t%s\n", f.Refresh.Format(DATE))
 		fmt.Fprintf(w, "\xff\t\xffUnread:\t%d\n", f.Unread)
 		fmt.Fprintf(w, "\xff\t\xffItems:\t(%d) {\n", len(f.Items))
@@ -207,6 +209,7 @@ func (f *Feed) String() string {
 		fmt.Fprintf(w, "Feed %q\n", f.Title)
 		fmt.Fprintf(w, "\t%q\n", f.Description)
 		fmt.Fprintf(w, "\t%q\n", f.Link)
+		fmt.Fprintf(w, "\t%s\n", f.Image)
 		fmt.Fprintf(w, "\tRefresh at %s\n", f.Refresh.Format(DATE))
 		fmt.Fprintf(w, "\tUnread: %d\n", f.Unread)
 		fmt.Fprintf(w, "\tItems:\n")
@@ -220,8 +223,11 @@ func (f *Feed) String() string {
 // Item represents a single story.
 type Item struct {
 	Title      string    `json:"title"`
+	Summary    string    `json:"summary"`
+	Categories []string  `json:"category"`
 	Link       string    `json:"link"`
 	Date       time.Time `json:"date"`
+	Image      *Image    `json:"image"`
 	DateValid  bool
 	ID         string       `json:"id"`
 	Enclosures []*Enclosure `json:"enclosures"`
@@ -241,6 +247,8 @@ func (i *Item) Format(indent int) string {
 		w := tabwriter.NewWriter(buf, 0, 8, 0, '\t', tabwriter.StripEscape)
 		fmt.Fprintf(w, "\xff%s\xffItem {\n", single)
 		fmt.Fprintf(w, "\xff%s\xffTitle:\t%q\n", double, i.Title)
+		fmt.Fprintf(w, "\xff%s\xffSummary:\t%q\n", double, i.Summary)
+		fmt.Fprintf(w, "\xff%s\xffCategories:\t%q\n", double, i.Categories)
 		fmt.Fprintf(w, "\xff%s\xffLink:\t%s\n", double, i.Link)
 		fmt.Fprintf(w, "\xff%s\xffDate:\t%s\n", double, i.Date.Format(DATE))
 		fmt.Fprintf(w, "\xff%s\xffID:\t%s\n", double, i.ID)

@@ -27,6 +27,7 @@ func parseAtom(data []byte) (*Feed, error) {
 			break
 		}
 	}
+	out.Image = feed.Image.Image()
 	out.Refresh = time.Now().Add(DefaultRefreshInterval)
 
 	out.Items = make([]*Item, 0, len(feed.Items))
@@ -42,6 +43,7 @@ func parseAtom(data []byte) (*Feed, error) {
 
 		next := new(Item)
 		next.Title = item.Title
+		next.Summary = item.Summary
 		if item.Published != "" {
 			next.Date, err = parseTime(item.Published)
 			if err == nil {
