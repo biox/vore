@@ -97,7 +97,15 @@ func (r *Reaper) refreshFeed(f *rss.Feed) {
 	if err != nil {
 		r.handleFeedFetchFailure(f.UpdateURL, err)
 	}
-	fmt.Printf("size of %s: %d bytes\n", f.UpdateURL, unsafe.Sizeof(f))
+	fmt.Printf("examining %s (size %d) - items(%d):\n", f.UpdateURL, unsafe.Sizeof(f), len(f.Items))
+	for _, c := range f.Categories {
+		fmt.Printf("  category %s: %d\n", c, unsafe.Sizeof(c))
+	}
+	for _, c := range f.Items {
+		fmt.Printf("  item struct %s: %d\n", c.Title, unsafe.Sizeof(c))
+		fmt.Printf("  item Title: %d\n", unsafe.Sizeof(c.Title))
+		fmt.Printf("  item Summary: %d\n", unsafe.Sizeof(c.Summary))
+	}
 }
 
 func (r *Reaper) handleFeedFetchFailure(url string, err error) {
