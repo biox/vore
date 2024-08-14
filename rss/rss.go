@@ -2,6 +2,7 @@ package rss
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -134,11 +135,16 @@ var errUpdateNotReady refreshError = "not ready to update: too soon to refresh"
 var DefaultRefreshInterval = 12 * time.Hour
 
 // Update fetches any new items and updates f.
-func (f *Feed) Update() error {
-	if f.FetchFunc == nil {
-		f.FetchFunc = DefaultFetchFunc
+func (f *Feed) Update(ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err() // Return the context error if it was canceled or timed out
+	default:
+		if f.FetchFunc == nil {
+			f.FetchFunc = DefaultFetchFunc
+		}
+		return f.UpdateByFunc(f.FetchFunc)
 	}
-	return f.UpdateByFunc(f.FetchFunc)
 }
 
 // UpdateByFunc uses a func to update f.
