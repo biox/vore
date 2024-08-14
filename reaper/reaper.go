@@ -2,16 +2,22 @@ package reaper
 
 import (
 	"errors"
-	"fmt"
 	"log"
+	"runtime"
 	"sort"
 	"sync"
 	"time"
-	"unsafe"
 
 	"git.j3s.sh/vore/rss"
 	"git.j3s.sh/vore/sqlite"
 )
+
+func getAlloc() uint64 {
+	var m runtime.MemStats
+	runtime.GC()
+	runtime.ReadMemStats(&m)
+	return m.Alloc
+}
 
 type Reaper struct {
 	// internal list of all rss feeds where the map
@@ -66,15 +72,19 @@ func (r *Reaper) refreshAllFeeds() {
 	ch := make(chan *rss.Feed)
 	var wg sync.WaitGroup
 	// i chose 20 workers somewhat arbitrarily
-	for i := 20; i > 0; i-- {
+	for i := 1; i > 0; i-- {
 		wg.Add(1)
 
 		go func() {
 			defer wg.Done()
 
 			for f := range ch {
+				memBefore := getAlloc()
 				start := time.Now()
 				r.refreshFeed(f)
+				memAfter := getAlloc()
+				memUsed := memAfter - memBefore
+				log.Printf("memUsed: %dKB", memUsed/1024)
 				log.Printf("reaper: %s refreshed in %s\n", f.UpdateURL, time.Since(start))
 			}
 		}()
@@ -96,15 +106,6 @@ func (r *Reaper) refreshFeed(f *rss.Feed) {
 	err := f.Update()
 	if err != nil {
 		r.handleFeedFetchFailure(f.UpdateURL, err)
-	}
-	fmt.Printf("examining %s (size %d) - items(%d):\n", f.UpdateURL, unsafe.Sizeof(f), len(f.Items))
-	for _, c := range f.Categories {
-		fmt.Printf("  category %s: %d\n", c, unsafe.Sizeof(c))
-	}
-	for _, c := range f.Items {
-		fmt.Printf("  item struct %s: %d\n", c.Title, unsafe.Sizeof(c))
-		fmt.Printf("  item Title: %d\n", unsafe.Sizeof(c.Title))
-		fmt.Printf("  item Summary: %d\n", unsafe.Sizeof(c.Summary))
 	}
 }
 
