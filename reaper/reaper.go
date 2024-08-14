@@ -79,12 +79,14 @@ func (r *Reaper) refreshAllFeeds() {
 			defer wg.Done()
 
 			for f := range ch {
+				log.Println()
+				log.Printf("got feed %s from chan\n", f.UpdateURL)
 				memBefore := getAlloc()
 				start := time.Now()
 				r.refreshFeed(f)
 				memAfter := getAlloc()
 				memUsed := memAfter - memBefore
-				log.Printf("memUsed: %dKB", memUsed/1024)
+				log.Printf("memUsed: %dKB\n", memUsed/1024)
 				log.Printf("reaper: %s refreshed in %s\n", f.UpdateURL, time.Since(start))
 			}
 		}()
