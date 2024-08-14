@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"strings"
@@ -154,7 +153,6 @@ func (f *Feed) UpdateByFunc(fetchFunc FetchFunc) error {
 		return errors.New("feed has no URL")
 	}
 
-	log.Printf("feed %s pre-items: %d\n", f.UpdateURL, len(f.Items))
 	if f.ItemMap == nil {
 		f.ItemMap = make(map[string]struct{})
 		for _, item := range f.Items {

@@ -3,7 +3,6 @@ package reaper
 import (
 	"errors"
 	"log"
-	"runtime"
 	"sort"
 	"sync"
 	"time"
@@ -11,13 +10,6 @@ import (
 	"git.j3s.sh/vore/rss"
 	"git.j3s.sh/vore/sqlite"
 )
-
-func getAlloc() uint64 {
-	var m runtime.MemStats
-	runtime.GC()
-	runtime.ReadMemStats(&m)
-	return m.Alloc
-}
 
 type Reaper struct {
 	// internal list of all rss feeds where the map
@@ -54,9 +46,10 @@ func (r *Reaper) start() {
 	}
 
 	for {
+		start := time.Now()
 		log.Println("reaper: refreshing all feeds")
 		r.refreshAllFeeds()
-		log.Println("reaper: refreshed all feeds, sleeping 😴")
+		log.Printf("reaper: refreshed all feeds in %s! going to sleep 😴\n", time.Since(start))
 		time.Sleep(15 * time.Minute)
 	}
 }
@@ -79,14 +72,8 @@ func (r *Reaper) refreshAllFeeds() {
 			defer wg.Done()
 
 			for f := range ch {
-				log.Println()
-				log.Printf("got feed %s from chan\n", f.UpdateURL)
-				memBefore := getAlloc()
 				start := time.Now()
 				r.refreshFeed(f)
-				memAfter := getAlloc()
-				memUsed := memAfter - memBefore
-				log.Printf("memUsed: %dKB\n", memUsed/1024)
 				log.Printf("reaper: %s refreshed in %s\n", f.UpdateURL, time.Since(start))
 			}
 		}()
