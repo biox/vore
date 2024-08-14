@@ -1,7 +1,6 @@
 package reaper
 
 import (
-	"context"
 	"errors"
 	"log"
 	"runtime"
@@ -106,15 +105,8 @@ func (r *Reaper) refreshAllFeeds() {
 // refreshFeed triggers a fetch on the given feed,
 // and sets a fetch error in the db if there is one.
 func (r *Reaper) refreshFeed(f *rss.Feed) {
-	// 20 seccy timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
-
-	err := f.Update(ctx)
+	err := f.Update()
 	if err != nil {
-		if ctx.Err() == context.DeadlineExceeded {
-			log.Printf("reaper: %s timed out after 20 seconds", f.UpdateURL)
-		}
 		r.handleFeedFetchFailure(f.UpdateURL, err)
 	}
 }

@@ -2,7 +2,6 @@ package rss
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -41,6 +40,7 @@ type FetchFunc func(url string) (resp *http.Response, err error)
 // DefaultFetchFunc uses http.DefaultClient to fetch a feed.
 var DefaultFetchFunc = func(url string) (resp *http.Response, err error) {
 	client := http.DefaultClient
+	client.Timeout = 20 * time.Second
 	return client.Get(url)
 }
 
@@ -135,16 +135,11 @@ var errUpdateNotReady refreshError = "not ready to update: too soon to refresh"
 var DefaultRefreshInterval = 12 * time.Hour
 
 // Update fetches any new items and updates f.
-func (f *Feed) Update(ctx context.Context) error {
-	select {
-	case <-ctx.Done():
-		return ctx.Err() // Return the context error if it was canceled or timed out
-	default:
-		if f.FetchFunc == nil {
-			f.FetchFunc = DefaultFetchFunc
-		}
-		return f.UpdateByFunc(f.FetchFunc)
+func (f *Feed) Update() error {
+	if f.FetchFunc == nil {
+		f.FetchFunc = DefaultFetchFunc
 	}
+	return f.UpdateByFunc(f.FetchFunc)
 }
 
 // UpdateByFunc uses a func to update f.
