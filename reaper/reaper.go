@@ -72,7 +72,7 @@ func (r *Reaper) refreshAllFeeds() {
 	ch := make(chan *rss.Feed)
 	var wg sync.WaitGroup
 	// i chose 20 workers somewhat arbitrarily
-	for i := 1; i > 0; i-- {
+	for i := 20; i > 0; i-- {
 		wg.Add(1)
 
 		go func() {
