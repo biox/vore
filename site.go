@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"html/template"
@@ -13,11 +14,11 @@ import (
 	"strings"
 	"time"
 
-	"git.j3s.sh/vore/archiveis"
 	"git.j3s.sh/vore/lib"
 	"git.j3s.sh/vore/reaper"
 	"git.j3s.sh/vore/rss"
 	"git.j3s.sh/vore/sqlite"
+	"git.j3s.sh/vore/wayback"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -138,7 +139,10 @@ func (s *Site) saveHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "error!")
 		return
 	}
-	archiveURL, err := archiveis.Capture(decodedURL)
+
+	c := wayback.Client{}
+
+	archiveURL, err := c.Archive(context.Background(), decodedURL)
 	if err != nil {
 		log.Println(err)
 		fmt.Fprintf(w, "error capturing archive!!")
