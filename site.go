@@ -170,7 +170,7 @@ func (s *Site) userHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	items := s.reaper.SortFeedItemsByDate(s.reaper.GetUserFeeds(username))
+	items := s.reaper.TrimFuturePosts(s.reaper.SortFeedItemsByDate(s.reaper.GetUserFeeds(username)))
 	data := struct {
 		User  string
 		Items []*rss.Item

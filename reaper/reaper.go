@@ -166,6 +166,20 @@ func (r *Reaper) SortFeedItemsByDate(feeds []*rss.Feed) []*rss.Item {
 	return posts
 }
 
+func (r *Reaper) TrimFuturePosts(items []*rss.Item) []*rss.Item {
+	var posts []*rss.Item
+	now := time.Now()
+
+	for _, i := range items {
+		if !i.Date.After(now) {
+			// Only include posts that are not in the future
+			posts = append(posts, i)
+		}
+	}
+
+	return posts
+}
+
 // Fetch attempts to fetch a feed from a given url, marshal
 // it into a feed object, and manage it via reaper.
 func (r *Reaper) Fetch(url string) error {
