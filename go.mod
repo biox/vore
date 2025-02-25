@@ -6,6 +6,7 @@ require (
 	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394
 	github.com/glebarez/go-sqlite v1.21.2
 	golang.org/x/crypto v0.19.0
+	golang.org/x/net v0.10.0
 )
 
 require (

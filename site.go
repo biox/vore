@@ -20,6 +20,7 @@ import (
 	"git.j3s.sh/vore/sqlite"
 	"git.j3s.sh/vore/wayback"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/net/html"
 )
 
 type Site struct {
@@ -283,6 +284,107 @@ func (s *Site) feedDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.renderPage(w, r, "feedDetails", feedData)
+}
+
+func (s *Site) fingerHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		s.renderPage(w, r, "finger", nil)
+	}
+	if r.Method == "POST" {
+		targetURL := r.FormValue("url")
+		if targetURL == "" {
+			http.Error(w, "Please provide a URL.", http.StatusBadRequest)
+			return
+		}
+
+		parsed, err := url.ParseRequestURI(targetURL)
+		if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") {
+			http.Error(w, "Invalid URL (only http/https allowed).", http.StatusBadRequest)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+		defer cancel()
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, targetURL, nil)
+		if err != nil {
+			http.Error(w, "failed to build request: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			http.Error(w, "failed to fetch URL: "+err.Error(), http.StatusBadGateway)
+			return
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode < 200 || resp.StatusCode > 299 {
+			http.Error(w, "non-2xx status from site: "+resp.Status, http.StatusBadGateway)
+			return
+		}
+
+		doc, err := html.Parse(resp.Body)
+		if err != nil {
+			http.Error(w, "failed to parse HTML: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		feeds := discoverFeeds(doc, parsed)
+
+		// Display the results
+		fmt.Fprintf(w, `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>%s feeds</title>
+</head>
+<body style="font-family:sans-serif;">`, html.EscapeString(targetURL))
+
+		if len(feeds) == 0 {
+			fmt.Fprintln(w, `<p><em>No RSS/Atom feeds found</em></p>`)
+		} else {
+			fmt.Fprintln(w, `<ul>`)
+			for _, f := range feeds {
+				fmt.Fprintf(w, `<li>%s</li>`, html.EscapeString(f))
+			}
+			fmt.Fprintln(w, `</ul>`)
+		}
+		fmt.Fprintln(w, `</body></html>`)
+	}
+}
+
+func discoverFeeds(doc *html.Node, base *url.URL) []string {
+	var feeds []string
+	var f func(*html.Node)
+	f = func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "link" {
+			var rel, typ, href string
+			for _, attr := range n.Attr {
+				switch attr.Key {
+				case "rel":
+					rel = attr.Val
+				case "type":
+					typ = attr.Val
+				case "href":
+					href = attr.Val
+				}
+			}
+
+			if rel == "alternate" && (typ == "application/rss+xml" || typ == "application/atom+xml") {
+				// make href absolute if necessary
+				u, err := base.Parse(href)
+				if err == nil {
+					feeds = append(feeds, u.String())
+				}
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			f(c)
+		}
+	}
+	f(doc)
+	return feeds
 }
 
 // username fetches a client's username based

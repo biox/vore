@@ -1,0 +1,16 @@
+{{ define "finger" }}
+{{ template "head" . }}
+{{ template "nav" . }}
+<form action="/finger" method="POST">
+    <p>finger a website, see what feeds come out, no need to view source!!</p>
+    <p>example urls:</p>
+    <ul>
+        <li>https://j3s.sh</li>
+        <li>https://www.youtube.com/@RickAstleyYT</li>
+    </ul>
+    <label for="urlBox">url: </label>
+    <input type="text" name="url" id="urlBox" size="50">
+    <button type="submit">poke</button>
+</form>
+{{ template "tail" . }}
+{{ end }}
