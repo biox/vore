@@ -22,11 +22,45 @@ go to <a href="/settings">/settings</a> to add your first feed!
 		published {{ .Date | timeSince }} via
 		<a href="//{{ .Link | printDomain }}">
 			{{ .Link | printDomain }}</a>
-		| <a href="/save/{{ .Link | escapeURL }}">save</a>
+		| <a href="#"
+			data-save-url="/save/{{ .Link | escapeURL }}"
+			onclick="saveItem(this); return false;">
+			save
+		</a>
 	</span>
 	</li>
 {{ end }}
 </ul>
+
+<script>
+function saveItem(element) {
+  const url = element.dataset.saveUrl;
+  const states = [".", "..", "..."];
+  let index = 0;
+
+  const intervalId = setInterval(() => {
+    element.textContent = "saving" + states[index];
+    index = (index + 1) % states.length;
+  }, 300);
+
+  fetch(url)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+      return response.text();
+    })
+    .then(data => {
+      clearInterval(intervalId);
+      element.textContent = "saved!";
+    })
+    .catch(error => {
+      console.error(error);
+      clearInterval(intervalId);
+      element.textContent = "error!";
+    });
+}
+</script>
 
 {{ template "tail" . }}
 {{ end }}

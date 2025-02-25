@@ -117,8 +117,8 @@ func (s *Site) registerHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-// saveHandler is an HTMX endpoint that returns the text "saved!" when
-// a post has been saved to a user's account
+// saveHandler is an endpoint that takes a url, archives it
+// via archive.org, and then saves it to the user's account.
 func (s *Site) saveHandler(w http.ResponseWriter, r *http.Request) {
 	if !s.loggedIn(r) {
 		s.renderErr(w, "", http.StatusUnauthorized)
@@ -159,7 +159,6 @@ func (s *Site) saveHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "error!!!")
 		return
 	}
-	fmt.Fprintf(w, "saved! you can go back now. this will eventually be async. lol.")
 }
 
 func (s *Site) userHandler(w http.ResponseWriter, r *http.Request) {

@@ -29,13 +29,13 @@
     - do not natively display posts
       posts always look like shit away from their home websites. instead
       of doing any of that nonsense, vore just takes website snapshots
-      via archive.is and presents them to the user.
+      via archive.org and presents them to the user.
   
     - saved entries will NEVER change/expire
       if a user uses the "save" feature, the data they were looking at
       must never be lost.
       therefore, we just copy whatever the active post state was from
-      memory & also snapshot the website via archive.is & link to the
+      memory & also snapshot the website via archive.org & link to the
       snapshot. this way, there's always a cached version available
       to use.
   
