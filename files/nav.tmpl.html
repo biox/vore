@@ -12,8 +12,7 @@
 	| <a {{ if eq .Title "settings" }}style="font-weight: bold;"{{ end }} href="/settings">settings</a>
 	| <a href="/logout">logout</a>
 	{{ else }}
-	<a {{ if eq .Title "finger" }}style="font-weight: bold;"{{ end }} href="/finger">finger</a>
-	| <a {{ if eq .Title "login" }}style="font-weight: bold;"{{ end }}href="/login">login</a>
+	<a {{ if eq .Title "login" }}style="font-weight: bold;"{{ end }}href="/login">login/register</a>
 	{{ end }}
 </nav>
 {{ end }}
