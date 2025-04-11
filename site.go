@@ -40,7 +40,13 @@ type Save struct {
 
 // New returns a fully populated & ready for action Site
 func New() *Site {
-	db := sqlite.New("vore.db?_pragma=journal_mode(WAL)")
+	// pragmas:
+	// - journal_mode=WAL: enable write-ahead log for concurrency & perf
+	// - foreign_keys=ON: need foreign keyz
+	// - busy_timeout=5000: locky locky 5 secs
+	// - synchronous=NORMAL: "The synchronous=NORMAL setting is a good choice for most applications running in WAL mode."
+	// - cache_size=-64000: 64MB ram for db cache (yum yum more perf)
+	db := sqlite.New("vore.db?_pragma=journal_mode(WAL)&_pragma=foreign_keys(ON)&_pragma=busy_timeout(5000)&_pragma=synchronous(NORMAL)&_pragma=cache_size(-64000)")
 	s := Site{
 		title:  "vore",
 		reaper: reaper.New(db),
