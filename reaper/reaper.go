@@ -42,8 +42,6 @@ func (r *Reaper) fetchFunc() rss.FetchFunc {
 			req.Header.Set("User-Agent", ua)
 		}
 
-		fmt.Println(req.Header.Get("User-Agent"))
-
 		return client.Do(req)
 	}
 	return reaperFetchFunc
