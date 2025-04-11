@@ -124,9 +124,7 @@ func (db *DB) AddUser(username string, passwordHash string) error {
 	return err
 }
 
-func (db *DB) Subscribe(username string, feedURL string) {
-	uid := db.GetUserID(username)
-	fid := db.GetFeedID(feedURL)
+func (db *DB) subscribe(uid int, fid int) {
 	var id int
 	err := db.sql.QueryRow("SELECT id FROM subscribe WHERE user_id=? AND feed_id=?", uid, fid).Scan(&id)
 	if err == sql.ErrNoRows {
@@ -141,8 +139,8 @@ func (db *DB) Subscribe(username string, feedURL string) {
 	}
 }
 
-func (db *DB) UnsubscribeAll(username string) {
-	_, err := db.sql.Exec("DELETE FROM subscribe WHERE user_id=?", db.GetUserID(username))
+func (db *DB) unsubscribeAll(uid int) {
+	_, err := db.sql.Exec("DELETE FROM subscribe WHERE user_id=?", uid)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -323,4 +321,28 @@ func (db *DB) GetFeedIDAndExists(feedURL string) (int, bool) {
 		log.Fatal(err)
 	}
 	return fid, true
+}
+
+func (db *DB) BatchSubscribe(username string, feedURLs []string) error {
+	tx, err := db.sql.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// first, unsub from everything
+	uid := db.GetUserID(username)
+	db.unsubscribeAll(uid)
+
+	// Add new subscriptions
+	for _, url := range feedURLs {
+		db.subscribe(uid, db.GetFeedID(url))
+	}
+
+	return tx.Commit()
 }

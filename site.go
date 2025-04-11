@@ -249,14 +249,14 @@ func (s *Site) settingsSubmitHandler(w http.ResponseWriter, r *http.Request) {
 		s.db.WriteFeed(u)
 	}
 
-	// TODO: this is insane, make it a transaction
-	//       so people don't lose feed subscriptions
-	//       if vore restarts in the middle of this
-	//       process.
-	s.db.UnsubscribeAll(s.username(r))
-	for _, url := range validatedURLs {
-		s.db.Subscribe(s.username(r), url)
+	err := s.db.BatchSubscribe(s.username(r), validatedURLs)
+	if err != nil {
+		log.Println(err)
+		e := fmt.Sprintf("reaper: can't batchsubscribe user=%s err=%s", s.username(r), err)
+		s.renderErr(w, e, http.StatusInternalServerError)
+		return
 	}
+
 	http.Redirect(w, r, "/settings", http.StatusSeeOther)
 }
 
