@@ -1,8 +1,11 @@
 package reaper
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"log"
+	"net/http"
 	"sort"
 	"sync"
 	"time"
@@ -17,6 +20,33 @@ type Reaper struct {
 	feeds map[string]*rss.Feed
 
 	db *sqlite.DB
+}
+
+func (r *Reaper) fetchFunc() rss.FetchFunc {
+	reaperFetchFunc := func(url string) (resp *http.Response, err error) {
+		client := http.Client{
+			Timeout: 20 * time.Second,
+		}
+
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("User-Agent", "Vore")
+
+		fid, exists := r.db.GetFeedIDAndExists(url)
+		if exists {
+			subs := r.db.GetSubscriberCount(url)
+			ua := fmt.Sprintf("Vore feed-id:%d - %d subscribers", fid, subs)
+			req.Header.Set("User-Agent", ua)
+		}
+
+		fmt.Println(req.Header.Get("User-Agent"))
+
+		return client.Do(req)
+	}
+	return reaperFetchFunc
 }
 
 func New(db *sqlite.DB) *Reaper {
@@ -92,6 +122,7 @@ func (r *Reaper) refreshAllFeeds() {
 // refreshFeed triggers a fetch on the given feed,
 // and sets a fetch error in the db if there is one.
 func (r *Reaper) refreshFeed(f *rss.Feed) {
+	f.FetchFunc = r.fetchFunc()
 	err := f.Update()
 	if err != nil {
 		r.handleFeedFetchFailure(f.UpdateURL, err)
@@ -183,7 +214,7 @@ func (r *Reaper) TrimFuturePosts(items []*rss.Item) []*rss.Item {
 // Fetch attempts to fetch a feed from a given url, marshal
 // it into a feed object, and manage it via reaper.
 func (r *Reaper) Fetch(url string) error {
-	feed, err := rss.Fetch(url)
+	feed, err := rss.FetchByFunc(r.fetchFunc(), url)
 	if err != nil {
 		return err
 	}

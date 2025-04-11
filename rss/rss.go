@@ -39,7 +39,6 @@ type FetchFunc func(url string) (resp *http.Response, err error)
 // DefaultFetchFunc uses http.DefaultClient to fetch a feed.
 var DefaultFetchFunc = func(url string) (resp *http.Response, err error) {
 	client := http.DefaultClient
-	client.Timeout = 20 * time.Second
 	return client.Get(url)
 }
 

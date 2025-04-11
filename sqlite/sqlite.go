@@ -298,3 +298,29 @@ func (db *DB) GetFeedFetchError(url string) (string, error) {
 	}
 	return "", nil
 }
+
+func (db *DB) GetSubscriberCount(feedURL string) int {
+	var count int
+	err := db.sql.QueryRow(`
+		SELECT COUNT(s.user_id)
+		FROM subscribe s
+		JOIN feed f ON s.feed_id = f.id
+		WHERE f.url = ?
+	`, feedURL).Scan(&count)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return count
+}
+
+func (db *DB) GetFeedIDAndExists(feedURL string) (int, bool) {
+	var fid int
+	err := db.sql.QueryRow("SELECT id FROM feed WHERE url=?", feedURL).Scan(&fid)
+	if err == sql.ErrNoRows {
+		return 0, false
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+	return fid, true
+}
