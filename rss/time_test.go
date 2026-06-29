@@ -100,6 +100,9 @@ func TestParseTime(t *testing.T) {
 	}, {
 		"Sun, 06 Sep 2009 16:18:00 +0200",
 		time.Date(2009, 9, 6, 14, 18, 0, 0, time.UTC),
+	}, {
+		"14 Jun 2026 00:00:00 UT",
+		time.Date(2026, 6, 14, 0, 0, 0, 0, time.UTC),
 	}}
 
 	for _, c := range tests {

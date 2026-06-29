@@ -79,6 +79,12 @@ var TimeLayouts = []string{
 func parseTime(s string) (time.Time, error) {
 	s = strings.TrimSpace(s)
 
+	// "UT" is a valid RFC 822 timezone alias for UTC, but Go's time package
+	// doesn't recognize it. Normalize it to "UTC" before parsing.
+	if strings.HasSuffix(s, " UT") {
+		s = s[:len(s)-2] + "UTC"
+	}
+
 	var e error
 	var t time.Time
 
